@@ -14,6 +14,11 @@ def _score_entry(entry: dict, tokens: list[str], prefer_layers: list[str]) -> in
     hay_name = str(entry.get("name", "")).lower()
     hay_paths = " ".join(entry.get("sql_files", []) + entry.get("doc_files", [])).lower()
     hay_cols = " ".join([c.get("name", "") for c in entry.get("columns", [])]).lower()
+    hay_part_cols = " ".join([c.get("name", "") for c in entry.get("partition_columns", [])]).lower()
+    signals = entry.get("signals", {}) or {}
+    hay_insert_targets = " ".join(signals.get("insert_targets", [])).lower()
+    hay_sources = " ".join(signals.get("source_tables", [])).lower()
+    hay_group_by = " ".join(signals.get("group_by", [])).lower()
 
     score = 0
     for t in tokens:
@@ -21,6 +26,14 @@ def _score_entry(entry: dict, tokens: list[str], prefer_layers: list[str]) -> in
             score += 5
         if t in hay_cols:
             score += 3
+        if t in hay_part_cols:
+            score += 3
+        if t in hay_insert_targets:
+            score += 2
+        if t in hay_group_by:
+            score += 2
+        if t in hay_sources:
+            score += 1
         if t in hay_paths:
             score += 1
 
@@ -77,6 +90,8 @@ def main() -> int:
         sql_files = entry.get("sql_files", [])
         doc_files = entry.get("doc_files", [])
         cols = entry.get("columns", [])
+        part_cols = entry.get("partition_columns", [])
+        signals = entry.get("signals", {}) or {}
 
         print(f"[{score:>3}] {layer:<7} {name}")
         if sql_files:
@@ -87,6 +102,23 @@ def main() -> int:
             sample = ", ".join([c.get("name", "") for c in cols[:12]])
             more = "" if len(cols) <= 12 else f" ...(+{len(cols) - 12})"
             print(f"      COL: {sample}{more}")
+        if part_cols:
+            sample = ", ".join([c.get("name", "") for c in part_cols[:8]])
+            more = "" if len(part_cols) <= 8 else f" ...(+{len(part_cols) - 8})"
+            print(f"     PART: {sample}{more}")
+
+        group_by = signals.get("group_by") or []
+        if group_by:
+            sample = ", ".join(group_by[:10])
+            more = "" if len(group_by) <= 10 else f" ...(+{len(group_by) - 10})"
+            print(f"  SIGNAL: group_by={sample}{more}")
+        row_part = signals.get("row_number_partition_by") or []
+        if row_part:
+            sample = ", ".join(row_part[:10])
+            more = "" if len(row_part) <= 10 else f" ...(+{len(row_part) - 10})"
+            print(f"  SIGNAL: row_number_partition_by={sample}{more}")
+        if signals.get("has_select_distinct"):
+            print("  SIGNAL: has_select_distinct=true")
 
     if not scored:
         print("未命中任何候选表。建议：扩大关键词、改用同义词、或先手动确认业务实体/指标中文名与表命名规则。")
@@ -96,4 +128,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

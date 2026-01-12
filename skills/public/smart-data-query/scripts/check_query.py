@@ -238,9 +238,18 @@ def _extract_select_identifiers(sql: str) -> set[str]:
             continue
 
         # Prefer explicit alias: "... as alias"
-        m = re.search(r"\bas\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$", item, flags=re.IGNORECASE)
+        m = re.search(
+            r"\bas\s+(?P<alias>(?:`[^`]+`|\"[^\"]+\"|\[[^\]]+\]|[a-zA-Z_][a-zA-Z0-9_]*))\s*$",
+            item,
+            flags=re.IGNORECASE,
+        )
         if m:
-            out.add(m.group(1).lower())
+            alias = m.group("alias").strip()
+            if len(alias) >= 2 and alias[0] == alias[-1] and alias[0] in {"`", '"'}:
+                alias = alias[1:-1]
+            elif len(alias) >= 2 and alias[0] == "[" and alias[-1] == "]":
+                alias = alias[1:-1]
+            out.add(alias.lower())
             continue
 
         # Otherwise, if it ends with "... <alias>" (and the left isn't just a dotted identifier),
@@ -248,7 +257,11 @@ def _extract_select_identifiers(sql: str) -> set[str]:
         tokens = item.split()
         if len(tokens) >= 2:
             tail = tokens[-1].strip()
-            if re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", tail):
+            if re.match(r"^(?:`[^`]+`|\"[^\"]+\"|\[[^\]]+\]|[a-zA-Z_][a-zA-Z0-9_]*)$", tail):
+                if len(tail) >= 2 and tail[0] == tail[-1] and tail[0] in {"`", '"'}:
+                    tail = tail[1:-1]
+                elif len(tail) >= 2 and tail[0] == "[" and tail[-1] == "]":
+                    tail = tail[1:-1]
                 out.add(tail.lower())
                 continue
 
@@ -275,6 +288,14 @@ def _extract_order_by_identifiers(sql: str) -> list[str]:
             continue
         if re.match(r"^\d+$", item):
             out.append(item)
+            continue
+        if re.match(r"^(?:`[^`]+`|\"[^\"]+\"|\[[^\]]+\])$", item):
+            ident = item
+            if len(ident) >= 2 and ident[0] == ident[-1] and ident[0] in {"`", '"'}:
+                ident = ident[1:-1]
+            elif len(ident) >= 2 and ident[0] == "[" and ident[-1] == "]":
+                ident = ident[1:-1]
+            out.append(ident.lower())
             continue
         m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)$", item)
         if m:

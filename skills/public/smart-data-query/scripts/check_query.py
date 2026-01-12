@@ -257,7 +257,7 @@ def _extract_select_identifiers(sql: str) -> set[str]:
         tokens = item.split()
         if len(tokens) >= 2:
             tail = tokens[-1].strip()
-            if re.match(r"^(?:`[^`]+`|\"[^\"]+\"|\[[^\]]+\]|[a-zA-Z_][a-zA-Z0-9_]*)$", tail):
+            if re.match(r"^(?:`[^`]+`|\"[^\"]+\"|\[[^\]]+\]|\w+)$", tail):
                 if len(tail) >= 2 and tail[0] == tail[-1] and tail[0] in {"`", '"'}:
                     tail = tail[1:-1]
                 elif len(tail) >= 2 and tail[0] == "[" and tail[-1] == "]":
@@ -266,7 +266,7 @@ def _extract_select_identifiers(sql: str) -> set[str]:
                 continue
 
         # Fallback: if it's a simple column reference, collect both full and short name.
-        m2 = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)$", item)
+        m2 = re.match(r"^(\w+\.)?(\w+)$", item)
         if m2:
             out.add(m2.group(2).lower())
     return out
@@ -297,7 +297,7 @@ def _extract_order_by_identifiers(sql: str) -> list[str]:
                 ident = ident[1:-1]
             out.append(ident.lower())
             continue
-        m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)$", item)
+        m = re.match(r"^(\w+\.)?(\w+)$", item)
         if m:
             out.append(m.group(2).lower())
             continue
@@ -379,6 +379,17 @@ def check(sql: str, dialect: str, catalog_index: dict[str, dict] | None) -> list
     if dialect in {"hive", "hive-legacy"}:
         selected = _extract_select_identifiers(sql)
         order_by = _extract_order_by_identifiers(sql)
+        if any(c.isdigit() for c in order_by):
+            warnings.append(
+                WarningItem(
+                    code="hive-orderby-positional",
+                    message=(
+                        "发现 `ORDER BY 1/2/3` 这类序号排序；你们环境明确不允许且 Hive 兼容性不稳定。"
+                        "建议改为引用“当前 SELECT 的输出列名”（例如中文别名）。"
+                    ),
+                )
+            )
+
         missing = [c for c in order_by if not c.isdigit() and c not in selected]
         if missing:
             warnings.append(
@@ -388,7 +399,7 @@ def check(sql: str, dialect: str, catalog_index: dict[str, dict] | None) -> list
                         "ORDER BY 引用了未出现在最终 SELECT 列表的字段（"
                         + ", ".join(missing)
                         + "）；部分 Hive 版本会报 `Invalid table alias or column reference`。"
-                        "建议：把排序字段也输出（可命名为辅助列并提示用户忽略/后处理删除），或改用 ORDER BY 位置序号。"
+                        "建议：ORDER BY 只引用“当前 SELECT 的输出列名”（如果输出用了中文别名，就用中文别名；必要时把排序字段也输出为辅助列）。"
                     ),
                 )
             )

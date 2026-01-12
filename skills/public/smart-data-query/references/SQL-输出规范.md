@@ -23,3 +23,4 @@
 - 对日期/时间函数使用与方言匹配的写法（不确定时先问用户）。
 - 对维表/映射表：若存在多版本/多行风险，先在 CTE 中去重/取最新再 join（避免多对多放大）。
 - 低版本 Hive 兼容性：避免在 `SELECT` 列表或 `JOIN ... ON` 中写子查询表达式（形如 `(select ...)`），优先用派生表/CTE 先算好再 `JOIN`。
+- Hive 兼容性：`ORDER BY` 尽量只用最终输出列（必要时把排序字段也输出为辅助列，或改用 `ORDER BY` 位置序号），避免部分版本报 `Invalid table alias or column reference`。

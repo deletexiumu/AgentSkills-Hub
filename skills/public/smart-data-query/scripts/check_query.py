@@ -182,6 +182,108 @@ def _find_top_level_select_clause(sql: str) -> str:
     return cleaned[select_pos + 6 : from_pos]
 
 
+def _find_top_level_order_by_clause(sql: str) -> str:
+    cleaned = _strip_comments(sql)
+    ob_pos = _find_top_level_keyword(cleaned, "order by", start=0)
+    if ob_pos == -1:
+        return ""
+    rest = cleaned[ob_pos + len("order by") :]
+    end = CLAUSE_END_RE.search(rest)
+    return rest[: end.start()] if end else rest
+
+
+def _split_top_level_comma(text: str) -> list[str]:
+    parts: list[str] = []
+    buf: list[str] = []
+    depth = 0
+    in_single = False
+    in_double = False
+    in_backtick = False
+
+    for ch in text:
+        if ch == "'" and not in_double and not in_backtick:
+            in_single = not in_single
+        elif ch == '"' and not in_single and not in_backtick:
+            in_double = not in_double
+        elif ch == "`" and not in_single and not in_double:
+            in_backtick = not in_backtick
+        elif not in_single and not in_double and not in_backtick:
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth = max(0, depth - 1)
+            elif ch == "," and depth == 0:
+                item = "".join(buf).strip()
+                if item:
+                    parts.append(item)
+                buf = []
+                continue
+        buf.append(ch)
+
+    tail = "".join(buf).strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def _extract_select_identifiers(sql: str) -> set[str]:
+    clause = _find_top_level_select_clause(sql)
+    if not clause.strip():
+        return set()
+    out: set[str] = set()
+
+    for raw in _split_top_level_comma(clause):
+        item = raw.strip()
+        if not item:
+            continue
+
+        # Prefer explicit alias: "... as alias"
+        m = re.search(r"\bas\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$", item, flags=re.IGNORECASE)
+        if m:
+            out.add(m.group(1).lower())
+            continue
+
+        # Otherwise, if it ends with "... <alias>" (and the left isn't just a dotted identifier),
+        # treat that last token as alias.
+        tokens = item.split()
+        if len(tokens) >= 2:
+            tail = tokens[-1].strip()
+            if re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", tail):
+                out.add(tail.lower())
+                continue
+
+        # Fallback: if it's a simple column reference, collect both full and short name.
+        m2 = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)$", item)
+        if m2:
+            out.add(m2.group(2).lower())
+    return out
+
+
+def _extract_order_by_identifiers(sql: str) -> list[str]:
+    clause = _find_top_level_order_by_clause(sql)
+    if not clause.strip():
+        return []
+    out: list[str] = []
+    for raw in _split_top_level_comma(clause):
+        item = raw.strip()
+        if not item:
+            continue
+        # Drop nulls first/last and direction
+        item = re.sub(r"\s+nulls\s+(first|last)\s*$", "", item, flags=re.IGNORECASE).strip()
+        item = re.sub(r"\s+(asc|desc)\s*$", "", item, flags=re.IGNORECASE).strip()
+        if not item:
+            continue
+        if re.match(r"^\d+$", item):
+            out.append(item)
+            continue
+        m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)$", item)
+        if m:
+            out.append(m.group(2).lower())
+            continue
+        # expression/function: ignore (can't safely validate)
+    return out
+
+
 def _iter_top_level_on_clauses(sql: str, max_clauses: int = 20) -> list[str]:
     cleaned = _strip_comments(sql)
     clauses: list[str] = []
@@ -252,6 +354,23 @@ def check(sql: str, dialect: str, catalog_index: dict[str, dict] | None) -> list
                 message="join 数量较多；注意维表多版本/多行导致多对多放大，必要时先对维表去重/取最新再 join。",
             )
         )
+
+    if dialect in {"hive", "hive-legacy"}:
+        selected = _extract_select_identifiers(sql)
+        order_by = _extract_order_by_identifiers(sql)
+        missing = [c for c in order_by if not c.isdigit() and c not in selected]
+        if missing:
+            warnings.append(
+                WarningItem(
+                    code="hive-orderby-not-selected",
+                    message=(
+                        "ORDER BY 引用了未出现在最终 SELECT 列表的字段（"
+                        + ", ".join(missing)
+                        + "）；部分 Hive 版本会报 `Invalid table alias or column reference`。"
+                        "建议：把排序字段也输出（可命名为辅助列并提示用户忽略/后处理删除），或改用 ORDER BY 位置序号。"
+                    ),
+                )
+            )
 
     if dialect == "hive-legacy":
         select_clause = _find_top_level_select_clause(sql)

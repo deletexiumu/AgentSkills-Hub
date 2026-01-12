@@ -19,3 +19,4 @@ python3 scripts/package_skill.py skills/public/my-skill dist
 
 更多流程与规范见：`docs/skill-workflow.md`。
 
+安装与加载（Claude / Codex）见：`docs/skill-installation.md`。

@@ -1,0 +1,21 @@
+{
+  "name": "agentskills",
+  "owner": {
+    "name": "AgentSkills",
+    "email": "maintainers@example.com"
+  },
+  "metadata": {
+    "description": "AgentSkills plugin marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "smart-data-query",
+      "description": "智能问数/数仓问答：基于需求 + 数仓目录（DDL+ETL）产出可执行 SQL（默认 Hive/SparkSQL，GaussDB 按需）",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/public/smart-data-query"]
+    }
+  ]
+}
+

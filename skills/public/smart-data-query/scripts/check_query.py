@@ -108,7 +108,96 @@ def _dialect_warnings(sql: str, dialect: str) -> list[WarningItem]:
                     message="发现 '::' 类型转换（更像 Postgres）；Hive/SparkSQL 可能需要改为 cast(x as type)。",
                 )
             )
+    elif dialect == "hive-legacy":
+        if "::" in sql:
+            warnings.append(
+                WarningItem(
+                    code="hive-legacy-postgres-cast",
+                    message="发现 '::' 类型转换（更像 Postgres）；低版本 Hive 建议改为 cast(x as type)。",
+                )
+            )
     return warnings
+
+
+def _strip_comments(sql: str) -> str:
+    sql = re.sub(r"/\\*.*?\\*/", " ", sql, flags=re.DOTALL)
+    sql = re.sub(r"--[^\\n]*", " ", sql)
+    return sql
+
+
+def _find_top_level_keyword(sql: str, keyword: str, start: int = 0) -> int:
+    target = keyword.lower()
+    depth = 0
+    in_single = False
+    in_double = False
+    in_backtick = False
+
+    i = start
+    while i < len(sql):
+        ch = sql[i]
+        if ch == "'" and not in_double and not in_backtick:
+            in_single = not in_single
+            i += 1
+            continue
+        if ch == '"' and not in_single and not in_backtick:
+            in_double = not in_double
+            i += 1
+            continue
+        if ch == "`" and not in_single and not in_double:
+            in_backtick = not in_backtick
+            i += 1
+            continue
+
+        if in_single or in_double or in_backtick:
+            i += 1
+            continue
+
+        if ch == "(":
+            depth += 1
+            i += 1
+            continue
+        if ch == ")":
+            depth = max(0, depth - 1)
+            i += 1
+            continue
+
+        if depth == 0:
+            if sql[i : i + len(target)].lower() == target:
+                before = sql[i - 1] if i > 0 else " "
+                after = sql[i + len(target)] if i + len(target) < len(sql) else " "
+                if not (before.isalnum() or before == "_") and not (after.isalnum() or after == "_"):
+                    return i
+        i += 1
+    return -1
+
+
+def _find_top_level_select_clause(sql: str) -> str:
+    cleaned = _strip_comments(sql)
+    select_pos = _find_top_level_keyword(cleaned, "select", start=0)
+    if select_pos == -1:
+        return ""
+    from_pos = _find_top_level_keyword(cleaned, "from", start=select_pos + 6)
+    if from_pos == -1:
+        return ""
+    return cleaned[select_pos + 6 : from_pos]
+
+
+def _iter_top_level_on_clauses(sql: str, max_clauses: int = 20) -> list[str]:
+    cleaned = _strip_comments(sql)
+    clauses: list[str] = []
+    start = 0
+    while len(clauses) < max_clauses:
+        on_pos = _find_top_level_keyword(cleaned, "on", start=start)
+        if on_pos == -1:
+            break
+        next_pos = len(cleaned)
+        for kw in (" join ", " where ", " group by ", " having ", " order by ", " limit ", " union "):
+            p = cleaned.lower().find(kw, on_pos + 2)
+            if p != -1:
+                next_pos = min(next_pos, p)
+        clauses.append(cleaned[on_pos + 2 : next_pos])
+        start = on_pos + 2
+    return clauses
 
 
 def check(sql: str, dialect: str, catalog_index: dict[str, dict] | None) -> list[WarningItem]:
@@ -163,6 +252,24 @@ def check(sql: str, dialect: str, catalog_index: dict[str, dict] | None) -> list
                 message="join 数量较多；注意维表多版本/多行导致多对多放大，必要时先对维表去重/取最新再 join。",
             )
         )
+
+    if dialect == "hive-legacy":
+        select_clause = _find_top_level_select_clause(sql)
+        if re.search(r"\(\s*select\b", select_clause, flags=re.IGNORECASE):
+            warnings.append(
+                WarningItem(
+                    code="hive-legacy-scalar-subquery-select",
+                    message="疑似在 SELECT 列表中使用 scalar subquery（形如 `(select ...)`）；低版本 Hive 常报 `Unsupported SubQuery Expression`，建议改写为 JOIN/派生表/CTE。",
+                )
+            )
+        for on_clause in _iter_top_level_on_clauses(sql):
+            if re.search(r"\(\s*select\b", on_clause, flags=re.IGNORECASE):
+                warnings.append(
+                    WarningItem(
+                        code="hive-legacy-scalar-subquery-on",
+                        message="疑似在 JOIN ... ON 条件中使用 subquery（形如 `(select ...)`）；低版本 Hive 可能不支持，建议先把子查询变成派生表再 JOIN，或改为两步聚合后 JOIN。",
+                    )
+                )
     return warnings
 
 
@@ -173,7 +280,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument(
         "--dialect",
         default="hive",
-        choices=["hive", "sparksql", "gaussdb"],
+        choices=["hive", "hive-legacy", "sparksql", "gaussdb"],
         help="目标方言（默认 hive）。",
     )
     args = parser.parse_args(argv)

@@ -12,6 +12,7 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 1. 需求内容：指标/维度/口径/时间范围/过滤条件/分组粒度/输出字段清单/排序与 TopN 规则。
 2. 数仓目录路径：包含 `ADS/`、`DWS/`、`DWT/`（大小写不敏感）及其下的表目录/设计文档/SQL 文件。
 3. SQL 方言与执行引擎：默认 Hive/SparkSQL；仅当用户明确要求时再输出 GaussDB 版本（影响日期函数、分区写法、引用符号）。
+   - 若 Hive 版本偏低/不确定：避免在 `SELECT` 列表或 `JOIN ... ON` 中使用子查询表达式（低版本 Hive 常报 `Unsupported SubQuery Expression`），优先改写为 `JOIN`/派生表/CTE。
 4. 表名命名/库名规则：是否需要加库前缀（如 `dw.ads_xxx`），以及环境（prod/test）。
 5. 时间字段与分区策略：常用分区字段名（如 `dt`/`ds`/`biz_date`），是字符串还是日期类型。
 6. 交付形式：只要最终 SQL，还是需要同时输出口径说明/字段释义/可选参数模板。
@@ -44,6 +45,7 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
    - `group by` 与选择列一致；聚合指标不重复计算。
    - 时间过滤命中分区字段（能下推则下推），避免全表扫描。
    - 可选：运行 `scripts/check_query.py --catalog <catalog.json> --dialect hive --sql <your.sql>` 输出启发式风险提示。
+   - 若 Hive 版本偏低：运行 `scripts/check_query.py --dialect hive-legacy --sql <your.sql>` 额外检查“SELECT/ON 中的子查询表达式”等兼容性雷点。
 6. 输出最终 SQL
    - 输出一段可直接执行的 SQL（含必要注释与参数占位），不要输出伪代码。
    - 若存在不确定口径，输出“可选分支 SQL”或在注释中明确假设，并给出需要用户确认的问题。

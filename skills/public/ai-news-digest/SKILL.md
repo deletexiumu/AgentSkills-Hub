@@ -1,6 +1,6 @@
 ---
 name: ai-news-digest
-description: Use when an agent needs to collect, deduplicate, and summarize AI news from curated sources into a daily/weekly digest with links and source attribution.
+description: 当需要从精选信源收集、去重、汇总 AI 资讯并生成每日/每周简报（含链接与来源归属）时使用。
 ---
 
 # 目标

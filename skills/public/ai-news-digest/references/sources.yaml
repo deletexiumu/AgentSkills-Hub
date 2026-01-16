@@ -1,0 +1,236 @@
+# AI 资讯信源注册表
+# 配置说明：
+#   id: 唯一标识符（小写下划线）
+#   name: 显示名称
+#   homepage: 官网首页
+#   feeds: RSS/Atom 订阅地址列表（优先使用第一个）
+#   lang: 语言代码 (en/zh)
+#   topics: 主要覆盖主题 [research, product, opensource, funding, policy]
+#   weight: 信源权重（1-10，影响排序）
+#   flags: 特殊标记 [needs_manual_feed, paywall, anti_bot, dynamic_page]
+
+sources:
+  # ============ 学术/研究 ============
+  - id: openai_blog
+    name: OpenAI Blog
+    homepage: https://openai.com/blog
+    feeds:
+      - https://openai.com/blog/rss.xml
+    lang: en
+    topics: [research, product]
+    weight: 9
+    flags: []
+
+  - id: anthropic_blog
+    name: Anthropic Blog
+    homepage: https://www.anthropic.com/news
+    feeds:
+      - https://raw.githubusercontent.com/conoro/anthropic-engineering-rss-feed/main/anthropic_engineering_rss.xml
+    lang: en
+    topics: [research, product, policy]
+    weight: 9
+    flags: []
+
+  - id: deepmind_blog
+    name: Google DeepMind Blog
+    homepage: https://deepmind.google/discover/blog/
+    feeds:
+      - https://deepmind.com/blog/feed/basic/
+      - https://blog.google/technology/google-deepmind/rss/
+    lang: en
+    topics: [research]
+    weight: 9
+    flags: []
+
+  - id: bair_blog
+    name: BAIR Blog
+    homepage: https://bair.berkeley.edu/blog/
+    feeds:
+      - https://bair.berkeley.edu/blog/feed.xml
+    lang: en
+    topics: [research]
+    weight: 8
+    flags: []
+
+  - id: mit_tech_review
+    name: MIT Technology Review (AI)
+    homepage: https://www.technologyreview.com/ai/
+    feeds:
+      - https://www.technologyreview.com/feed/
+    lang: en
+    topics: [research, product, policy]
+    weight: 8
+    flags: []
+
+  # ============ 行业新闻 ============
+  - id: techcrunch_ai
+    name: TechCrunch AI
+    homepage: https://techcrunch.com/tag/artificial-intelligence/
+    feeds:
+      - https://techcrunch.com/tag/artificial-intelligence/feed/
+    lang: en
+    topics: [product, funding, opensource]
+    weight: 8
+    flags: []
+
+  - id: the_verge_ai
+    name: The Verge AI
+    homepage: https://www.theverge.com/ai-artificial-intelligence
+    feeds:
+      - https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+    lang: en
+    topics: [product, policy]
+    weight: 7
+    flags: []
+
+  - id: ars_technica_ai
+    name: Ars Technica AI
+    homepage: https://arstechnica.com/ai/
+    feeds:
+      - https://feeds.arstechnica.com/arstechnica/technology-lab
+    lang: en
+    topics: [product, research]
+    weight: 7
+    flags: []
+
+  - id: ai_news
+    name: Artificial Intelligence News
+    homepage: https://www.artificialintelligence-news.com/
+    feeds:
+      - https://www.artificialintelligence-news.com/feed/
+    lang: en
+    topics: [product, research, funding]
+    weight: 6
+    flags: []
+
+  # ============ 社区/数据科学 ============
+  - id: huggingface_blog
+    name: Hugging Face Blog
+    homepage: https://huggingface.co/blog
+    feeds:
+      - https://huggingface.co/blog/feed.xml
+    lang: en
+    topics: [opensource, research, product]
+    weight: 8
+    flags: []
+
+  - id: marktechpost
+    name: MarkTechPost
+    homepage: https://www.marktechpost.com/
+    feeds:
+      - https://www.marktechpost.com/feed/
+    lang: en
+    topics: [research, opensource]
+    weight: 6
+    flags: []
+
+  - id: tds
+    name: Towards Data Science
+    homepage: https://towardsdatascience.com/
+    feeds:
+      - https://towardsdatascience.com/feed
+    lang: en
+    topics: [research, opensource]
+    weight: 6
+    flags: []
+
+  - id: kdnuggets
+    name: KDnuggets
+    homepage: https://www.kdnuggets.com/
+    feeds:
+      - https://www.kdnuggets.com/feed
+    lang: en
+    topics: [research, opensource]
+    weight: 5
+    flags: []
+
+  # ============ 中文信源 ============
+  - id: jiqizhixin
+    name: 机器之心
+    homepage: https://www.jiqizhixin.com/
+    feeds: []
+    lang: zh
+    topics: [research, product, funding]
+    weight: 8
+    flags: [needs_manual_feed, dynamic_page]
+
+  - id: qbitai
+    name: 量子位
+    homepage: https://www.qbitai.com/
+    feeds: []
+    lang: zh
+    topics: [research, product]
+    weight: 7
+    flags: [needs_manual_feed, dynamic_page]
+
+  - id: leiphone_ai
+    name: 雷锋网 AI
+    homepage: https://www.leiphone.com/category/ai
+    feeds: []
+    lang: zh
+    topics: [product, research, funding]
+    weight: 7
+    flags: [needs_manual_feed, dynamic_page]
+
+  - id: xinzhiyuan
+    name: 新智元
+    homepage: https://www.xinzhiyuan.com.cn/
+    feeds: []
+    lang: zh
+    topics: [research, product]
+    weight: 6
+    flags: [needs_manual_feed, anti_bot]
+
+  - id: kr36_ai
+    name: 36氪 AI
+    homepage: https://36kr.com/tag/ai
+    feeds: []
+    lang: zh
+    topics: [product, funding]
+    weight: 7
+    flags: [needs_manual_feed, dynamic_page]
+
+  # ============ 不建议自动化抓取 ============
+  - id: theinformation
+    name: The Information
+    homepage: https://www.theinformation.com/ai
+    feeds: []
+    lang: en
+    topics: [funding, product]
+    weight: 0
+    flags: [paywall]
+
+  - id: zhihu_ai
+    name: 知乎 AI 话题
+    homepage: https://www.zhihu.com/topic/19552832
+    feeds: []
+    lang: zh
+    topics: [research, product]
+    weight: 0
+    flags: [paywall, anti_bot]
+
+# 默认配置
+defaults:
+  # 默认启用的信源（没有 paywall 且有 RSS feed 的）
+  enabled_sources:
+    - openai_blog
+    - bair_blog
+    - techcrunch_ai
+    - the_verge_ai
+    - huggingface_blog
+    - marktechpost
+    - ai_news
+
+  # 抓取设置
+  fetch:
+    timeout_seconds: 30
+    max_retries: 3
+    rate_limit_per_domain: 2  # 每个域名每秒最多请求数
+    cache_ttl_minutes: 15
+
+  # 输出设置
+  output:
+    max_items_total: 20
+    max_items_per_topic: 5
+    default_lang: zh
+    default_timezone: Asia/Shanghai

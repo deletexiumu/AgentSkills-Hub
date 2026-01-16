@@ -281,23 +281,50 @@ python run.py --day 今天 --llm
 ```markdown
 # AI 资讯简报（2026-01-16）
 
-> 时间窗口：2026-01-16（今天）
-> 语言：中文
-> 信源：共 13 个，成功 11 个
+> 时间窗口：2026-01-16（今天，Asia/Shanghai）
+> 信源：13（成功 11）｜条目：11
 
 ## 研究 / 论文 / 实验室
 
-- **Google AI Releases TranslateGemma**（MarkTechPost，2026-01-16 05:39）
-  - 链接：https://www.marktechpost.com/...
-  - 摘要：Google AI has released TranslateGemma...
-  - 标签：AI Paper Summary, Applications
+- Google 发布 TranslateGemma：基于 Gemma 3 的开源翻译模型家族，支持 55 种语言（MarkTechPost，2026-01-16 13:39）
+    - 链接：https://www.marktechpost.com/2026/01/15/google-ai-releases-translategemma-a-new-family-of-open-translation-models-built-on-gemma-3-with-support-for-55-languages/
+    - 摘要：介绍 TranslateGemma（4B/12B/27B）作为面向机器翻译的开源模型系列，目标覆盖 55 种语言。文章提到其通过后训练流程强化翻译能力，并强调可在多种硬件环境部署。
+- NVIDIA 开源 KVzap：KV Cache 剪枝/压缩方法，宣称近乎无损实现 2–4 倍压缩（MarkTechPost，2026-01-16 05:12）
+    - 链接：https://www.marktechpost.com/2026/01/15/nvidia-ai-open-sourced-kvzap-a-sota-kv-cache-pruning-method-that-delivers-near-lossless-2x-4x-compression/
+    - 摘要：聚焦长上下文推理中 KV cache 的显存与延迟瓶颈，提出通过剪枝等方式显著压缩缓存体积。核心目标是在效果损失很小的前提下提升可部署性与吞吐。
+- OptiMind：一个面向"优化（optimization）"任务的研究模型（Hugging Face Blog，2026-01-16 02:49）
+    - 链接：https://huggingface.co/blog/microsoft/optimind
+    - 摘要：Hugging Face 博文介绍微软发布的 OptiMind 研究模型，定位为优化类问题相关研究与实验用途（细节以原文为准）。
+- OpenAI 一位安全研究负责人加入 Anthropic（The Verge，2026-01-16 02:00）
+    - 链接：https://www.theverge.com/ai-artificial-intelligence/862402/openai-safety-lead-model-policy-departs-for-anthropic-alignment-andrea-vallone
+    - 摘要：报道 OpenAI 负责"聊天机器人对心理健康/情感依赖等风险信号如何响应"方向的研究负责人离职并加入 Anthropic。反映了行业在模型安全与用户心理风险治理上的持续投入与争议。
 
 ## 产品 / 模型 / 发布
 
-- **Apple lost the AI race**（The Verge AI，2026-01-15 14:00）
-  - 链接：https://www.theverge.com/...
-  - 摘要：With news that Apple will use Gemini...
-  - 标签：AI, Apple, Mobile
+- 如何构建"安全的自治事前授权（Prior Authorization）代理"：强调人类在环控制（MarkTechPost，2026-01-16 14:42）
+    - 链接：https://www.marktechpost.com/2026/01/15/how-to-build-a-safe-autonomous-prior-authorization-agent-for-healthcare-revenue-cycle-management-with-human-in-the-loop-controls/
+    - 摘要：教程式文章展示自治 agent 如何端到端处理医疗 RCM 的事前授权流程（收集材料、提交、跟踪、申诉）。重点强调保守策略与 human-in-the-loop 以降低误判与合规风险。
+- Grok 被指"生成未经同意的去衣图像"，当事人起诉（The Verge，2026-01-16 07:33）
+    - 链接：https://www.theverge.com/news/863097/ashley-st-clair-elon-musk-grok-undressing-lawsuit
+    - 摘要：报道围绕 X 平台聊天机器人 Grok 的"虚拟去衣/性化生成"能力引发的诉讼与安全争议。焦点在于平台是否提供了足够的防滥用机制与未成年人保护。
+- "Apple 输了 AI 竞赛？真正的挑战才开始"（The Verge，2026-01-16 03:00）
+    - 链接：https://www.theverge.com/tech/861957/google-apple-ai-deal-iphone-gemini
+    - 摘要：讨论 Apple Intelligence 推进受挫与引入 Gemini 等合作动向，以及 Apple 在"智能助手能力"与生态产品化之间的权衡。强调竞争不只在模型能力，也在落地体验与长期策略。
+- CIO 视角：2026 将更重视 AI 的治理与可度量价值（Artificial Intelligence News，2026-01-16 03:29）
+    - 链接：https://www.artificialintelligence-news.com/news/ai-predictions-dominated-the-conversation-in-2025-cios-shift-gears-in-2026/
+    - 摘要：认为 2025 的快速上马后，2026 会更强调把 AI 嵌入工作流触发行动，并用可验证指标衡量收益。关注点从"热度/主观体验"转向"治理、成本与真实业务结果"。
+
+## 其他
+
+- 独家电子书：AGI 如何成为影响深远的"阴谋论"（MIT Technology Review，2026-01-16 01:16）
+    - 链接：https://www.technologyreview.com/2026/01/15/1131079/exclusive-ebook-how-agi-became-a-consequential-conspiracy-theory/
+    - 摘要：订阅者内容，围绕"机器将与人类同等或更聪明"的叙事如何影响产业与公众讨论展开（不绕过付费墙，仅基于公开标题/摘要信息整理）。
+- Raspberry Pi 新增 AI 扩展板：8GB 内存用于本地跑生成式模型（The Verge，2026-01-16 01:30）
+    - 链接：https://www.theverge.com/news/862748/raspberry-pi-ai-hat-2-gen-ai-ram
+    - 摘要：报道 Raspberry Pi 推出可在 Pi 5 上辅助运行本地生成式 AI 的新扩展板，强调内存与算力配置升级。定位是把部分 AI 负载从主 CPU 分离出来以提升整体可用性。
+- 当 Shapley 值"失效"时：更稳健的模型可解释性指南（Towards Data Science，2026-01-16 00:30）
+    - 链接：https://towardsdatascience.com/when-shapley-values-break-a-guide-to-robust-model-explainability/
+    - 摘要：指出 Shapley 值解释在一些场景下可能产生误导，并给出改进思路以获得更可靠的解释结论。适合在特征相关性强、分布漂移等情况下做方法校正参考。
 ```
 
 ### JSON 格式

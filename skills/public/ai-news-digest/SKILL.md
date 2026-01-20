@@ -57,11 +57,23 @@ python run.py --day 今天
 # 获取昨天的资讯
 python run.py --day yesterday
 
+# 如遇本地 SSL 证书链问题（不推荐），可禁用校验
+python run.py --day yesterday --insecure
+
 # 指定日期
 python run.py --day 2026-01-15
 
 # 输出 JSON 格式
 python run.py --day 今天 --format json
+
+# 输出分享图片（需安装 Pillow）
+python run.py --day 今天 --format image
+
+# 输出横版图片（适合公众号）
+python run.py --day 今天 --format image --image-preset landscape
+
+# 输出浅色主题图片
+python run.py --day 今天 --format image --image-theme light
 
 # 写入文件
 python run.py --day 今天 --out digest.md
@@ -85,7 +97,9 @@ python run.py --test
 | `--until` | 结束时间（ISO 8601） | - |
 | `--tz` | 时区 | Asia/Shanghai |
 | `--lang, -l` | 输出语言（zh/en） | zh |
-| `--format, -f` | 输出格式（markdown/json） | markdown |
+| `--format, -f` | 输出格式（markdown/json/image） | markdown |
+| `--image-preset` | 图片尺寸（portrait/landscape/square） | portrait |
+| `--image-theme` | 图片主题（dark/light） | dark |
 | `--out, -o` | 输出文件路径 | - |
 | `--topics, -t` | 主题过滤（逗号分隔） | 全部 |
 | `--sources, -s` | 信源过滤（ID，逗号分隔） | 全部 |
@@ -93,6 +107,7 @@ python run.py --test
 | `--max-per-topic` | 每主题最大条数 | 5 |
 | `--llm` | 使用 LLM 翻译 | 否 |
 | `--verbose, -v` | 详细输出 | 否 |
+| `--insecure` | 禁用 SSL 证书校验（不推荐） | 否 |
 
 ## 脚本模块说明
 
@@ -105,19 +120,33 @@ python run.py --test
 | `dedupe.py` | 去重与多信源合并 |
 | `classify_rank.py` | 主题分类与排序 |
 | `render_digest.py` | Markdown/JSON 渲染 |
+| `render_image.py` | 图片渲染（社交分享卡片） |
 | `summarize_llm.py` | LLM 翻译（可选） |
 
 ## 依赖
 
 **必需**（Python 标准库）：
 - Python 3.10+
-- 无第三方依赖即可运行
+- 无第三方依赖即可运行 Markdown/JSON 输出
 
 **可选**（增强功能）：
+- `Pillow`: 图片渲染功能（`--format image`）
 - `pyyaml`: 更完整的 YAML 解析（脚本内置简化解析器，无需安装也能正常加载 `sources.yaml`）
 - `anthropic` 或 `openai`: LLM 翻译功能
 
-> **注意**：未安装 pyyaml 时，脚本会使用内置的简化 YAML 解析器，可正常加载完整信源列表。
+### 安装可选依赖
+
+```bash
+# 安装图片渲染支持
+pip install Pillow
+
+# 安装所有可选依赖
+pip install Pillow pyyaml anthropic
+```
+
+> **注意**：
+> - 未安装 Pillow 时，Markdown 和 JSON 输出正常工作，仅图片输出不可用
+> - 未安装 pyyaml 时，脚本会使用内置的简化 YAML 解析器，可正常加载完整信源列表
 
 # 资源
 

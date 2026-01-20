@@ -16,6 +16,7 @@ import random
 import time
 import urllib.request
 import urllib.error
+import ssl
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
@@ -86,7 +87,8 @@ class FeedFetcher:
         max_retries: int = 3,
         rate_limit: float = 2.0,
         cache_ttl_minutes: int = 15,
-        user_agent: str = "AI-News-Digest/1.0 (RSS Reader)"
+        user_agent: str = "AI-News-Digest/1.0 (RSS Reader)",
+        insecure: bool = False
     ):
         """
         初始化抓取器
@@ -98,12 +100,15 @@ class FeedFetcher:
             rate_limit: 每秒每域名最大请求数
             cache_ttl_minutes: 缓存有效期（分钟）
             user_agent: User-Agent 字符串
+            insecure: 禁用 SSL 证书校验（不推荐，仅用于本地环境证书问题）
         """
         self.timeout = timeout
         self.max_retries = max_retries
         self.cache_ttl_minutes = cache_ttl_minutes
         self.user_agent = user_agent
         self.rate_limiter = RateLimiter(rate_limit)
+        self.insecure = insecure
+        self._ssl_context = ssl._create_unverified_context() if insecure else ssl.create_default_context()
 
         # 设置缓存目录
         if cache_dir:
@@ -199,7 +204,7 @@ class FeedFetcher:
                     request.add_header("If-Modified-Since", cached_last_modified)
 
                 # 发送请求
-                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                with urllib.request.urlopen(request, timeout=self.timeout, context=self._ssl_context) as response:
                     status_code = response.status
                     content_type = response.headers.get("Content-Type", "")
                     etag = response.headers.get("ETag")

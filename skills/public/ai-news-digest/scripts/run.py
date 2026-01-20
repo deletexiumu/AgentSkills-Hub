@@ -30,6 +30,7 @@ from dedupe import dedupe_articles
 from classify_rank import classify_and_rank_articles, TOPICS
 from render_digest import render_digest, create_digest, DigestRenderer
 from summarize_llm import create_summarizer
+from render_image import check_pillow_available, render_image
 
 try:
     import yaml
@@ -212,7 +213,10 @@ def run_digest(
     max_items: int = 20,
     max_per_topic: int = 5,
     use_llm: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
+    insecure: bool = False,
+    image_preset: str = "portrait",
+    image_theme: str = "dark"
 ) -> str:
     """
     运行摘要生成
@@ -225,15 +229,17 @@ def run_digest(
         lang: 输出语言
         topics: 主题过滤
         sources: 信源过滤
-        output_format: 输出格式（markdown/json）
+        output_format: 输出格式（markdown/json/image）
         output_path: 输出文件路径
         max_items: 最大条数
         max_per_topic: 每主题最大条数
         use_llm: 是否使用 LLM 翻译
         verbose: 详细输出
+        image_preset: 图片尺寸预设（portrait/landscape/square）
+        image_theme: 图片颜色主题（dark/light）
 
     Returns:
-        渲染后的摘要内容
+        渲染后的摘要内容或图片路径
     """
     # 1. 解析时间窗口
     if since and until:
@@ -263,7 +269,7 @@ def run_digest(
         return "错误: 无可用信源"
 
     # 3. 抓取 feed
-    fetcher = FeedFetcher()
+    fetcher = FeedFetcher(insecure=insecure)
     fetch_results = fetcher.fetch_all(enabled_sources)
 
     successes = [r for r in fetch_results if r.success]
@@ -361,27 +367,54 @@ def run_digest(
         })
 
     # 12. 渲染输出
-    template_path = SCRIPT_DIR.parent / "assets" / "digest-template.md"
-    output = render_digest(
-        grouped,
-        time_window,
-        failures=failure_list,
-        output_format=output_format,
-        template_path=str(template_path) if template_path.exists() else None,
-        sources_queried=len(enabled_sources),
-        sources_succeeded=len(successes),
-        lang=lang,
-        timezone=tz
-    )
+    if output_format == "image":
+        # 图片输出
+        if not check_pillow_available():
+            return "错误: 图片渲染需要安装 Pillow: pip install Pillow"
 
-    # 13. 写入文件（可选）
-    if output_path:
-        output_file = Path(output_path)
-        output_file.write_text(output, encoding="utf-8")
+        # 默认输出路径
+        if not output_path:
+            date_str = time_window.get("display", "").split("（")[0].replace("-", "")
+            if not date_str or len(date_str) < 8:
+                date_str = datetime.now().strftime("%Y%m%d")
+            output_path = f"ai_news_{date_str}.png"
+
+        output = render_image(
+            grouped,
+            time_window,
+            output_path,
+            preset=image_preset,
+            theme=image_theme,
+            max_items=min(max_items, 8),  # 图片最多显示 8 条
+        )
+
         if verbose:
-            print(f"已写入: {output_path}")
+            print(f"图片已保存: {output}")
 
-    return output
+        return output
+    else:
+        # Markdown/JSON 输出
+        template_path = SCRIPT_DIR.parent / "assets" / "digest-template.md"
+        output = render_digest(
+            grouped,
+            time_window,
+            failures=failure_list,
+            output_format=output_format,
+            template_path=str(template_path) if template_path.exists() else None,
+            sources_queried=len(enabled_sources),
+            sources_succeeded=len(successes),
+            lang=lang,
+            timezone=tz
+        )
+
+        # 13. 写入文件（可选）
+        if output_path:
+            output_file = Path(output_path)
+            output_file.write_text(output, encoding="utf-8")
+            if verbose:
+                print(f"已写入: {output_path}")
+
+        return output
 
 
 def main():
@@ -431,8 +464,20 @@ def main():
     parser.add_argument(
         "--format", "-f",
         help="输出格式",
-        choices=["markdown", "json"],
+        choices=["markdown", "json", "image"],
         default="markdown"
+    )
+    parser.add_argument(
+        "--image-preset",
+        help="图片尺寸预设（portrait=竖版/landscape=横版/square=方形）",
+        choices=["portrait", "landscape", "square"],
+        default="portrait"
+    )
+    parser.add_argument(
+        "--image-theme",
+        help="图片颜色主题",
+        choices=["dark", "light"],
+        default="dark"
     )
     parser.add_argument(
         "--out", "-o",
@@ -476,6 +521,11 @@ def main():
         action="store_true"
     )
     parser.add_argument(
+        "--insecure",
+        help="禁用 SSL 证书校验（不推荐，仅用于本地证书链问题）",
+        action="store_true"
+    )
+    parser.add_argument(
         "--test",
         help="运行自测试",
         action="store_true"
@@ -513,7 +563,10 @@ def main():
             max_items=args.max,
             max_per_topic=args.max_per_topic,
             use_llm=args.llm,
-            verbose=args.verbose
+            verbose=args.verbose,
+            insecure=args.insecure,
+            image_preset=args.image_preset,
+            image_theme=args.image_theme
         )
         print(output)
     except Exception as e:

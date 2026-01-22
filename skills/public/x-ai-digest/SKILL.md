@@ -1,6 +1,6 @@
 ---
 name: x-ai-digest
-description: [ZH] 从 X 平台主页「为你推荐」栏目抓取 AI 相关资讯，生成每日简报并提供回复建议；[EN] Scrape AI-related posts from X platform's "For You" feed, generate daily digest with reply suggestions；[JA] Xプラットフォームの「おすすめ」からAI関連投稿を収集し、日次要約と返信提案を生成
+description: Scrape AI-related posts from X platform's "For You" feed, generate daily digest with reply suggestions. Features real-time scraping, AI topic filtering, share card generation, multi-language output (ZH/EN/JA).
 ---
 
 <!-- i18n-examples:start -->

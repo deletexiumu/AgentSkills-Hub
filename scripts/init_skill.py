@@ -23,9 +23,7 @@ def _render_skill_md(skill_name: str) -> str:
     return (
         "---\n"
         f"name: {skill_name}\n"
-        "description: [ZH] 用一句话说明这个 skill 做什么，以及在什么触发语境/任务类型下应该使用它（尽量包含关键词）；"
-        "[EN] Describe what this skill does in one sentence, and in what context/task type it should be used (include keywords)；"
-        "[JA] このスキルが何をするか、どのような状況/タスクで使用すべきかを一文で説明（キーワードを含む）\n"
+        "description: Describe what this skill does in one sentence, and in what context/task type it should be used. Include key features and supported languages if applicable.\n"
         "---\n\n"
         "<!-- i18n-examples:start -->\n"
         "## 调用 / Invoke / 呼び出し\n\n"

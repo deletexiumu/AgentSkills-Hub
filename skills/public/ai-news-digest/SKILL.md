@@ -1,6 +1,6 @@
 ---
 name: ai-news-digest
-description: [ZH] 多信源 AI 资讯聚合与简报生成，支持自动去重、分类、链接溯源；[EN] Multi-source AI news aggregation and digest generation with deduplication, classification, and source tracing；[JA] 複数ソースからのAIニュース収集と要約生成、重複排除・分類・出典追跡機能付き
+description: Multi-source AI news aggregation and digest generation with deduplication, classification, and source tracing. Supports 20+ sources, 5 theme categories, multi-language output (ZH/EN/JA), and image export.
 ---
 
 <!-- i18n-examples:start -->

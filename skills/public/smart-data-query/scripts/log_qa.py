@@ -13,7 +13,7 @@ from typing import Any
 
 @dataclass(frozen=True)
 class State:
-    last_optimized_count: int
+    last_optimized_labeled_count: int
     last_optimized_at: str
 
 
@@ -59,16 +59,45 @@ def _count_jsonl_lines(path: Path) -> int:
     with path.open("rb") as f:
         return sum(1 for line in f if line.strip())
 
+def _normalize_label(raw: Any) -> str:
+    s = str(raw or "").strip().lower()
+    if s in {"good", "good_case", "goodcase"}:
+        return "good"
+    if s in {"bad", "bad_case", "badcase"}:
+        return "bad"
+    return "unknown"
+
+
+def _count_labeled_sessions(path: Path) -> int:
+    if not path.exists():
+        return 0
+    labeled = 0
+    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(obj, dict):
+            continue
+        if _normalize_label(obj.get("label")) in {"good", "bad"}:
+            labeled += 1
+    return labeled
+
 
 def _load_state(path: Path) -> State:
     if not path.exists():
-        return State(last_optimized_count=0, last_optimized_at="")
+        return State(last_optimized_labeled_count=0, last_optimized_at="")
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return State(last_optimized_count=0, last_optimized_at="")
+        return State(last_optimized_labeled_count=0, last_optimized_at="")
     return State(
-        last_optimized_count=int(payload.get("last_optimized_count") or 0),
+        last_optimized_labeled_count=int(
+            payload.get("last_optimized_labeled_count") or payload.get("last_optimized_count") or 0
+        ),
         last_optimized_at=str(payload.get("last_optimized_at") or ""),
     )
 
@@ -77,7 +106,10 @@ def _save_state(path: Path, state: State) -> None:
     _ensure_parent(path)
     path.write_text(
         json.dumps(
-            {"last_optimized_count": state.last_optimized_count, "last_optimized_at": state.last_optimized_at},
+            {
+                "last_optimized_labeled_count": state.last_optimized_labeled_count,
+                "last_optimized_at": state.last_optimized_at,
+            },
             ensure_ascii=False,
             indent=2,
         )
@@ -85,13 +117,41 @@ def _save_state(path: Path, state: State) -> None:
         encoding="utf-8",
     )
 
+def _update_jsonl_entry(path: Path, entry_id: str, patch: dict[str, Any]) -> bool:
+    if not path.exists():
+        return False
+
+    updated = False
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with path.open("r", encoding="utf-8", errors="ignore") as src, tmp.open("w", encoding="utf-8") as dst:
+        for raw in src:
+            line = raw.rstrip("\n")
+            stripped = line.strip()
+            if not stripped:
+                dst.write(raw)
+                continue
+            try:
+                obj = json.loads(stripped)
+            except json.JSONDecodeError:
+                dst.write(raw)
+                continue
+            if isinstance(obj, dict) and str(obj.get("id", "")).strip() == entry_id:
+                obj.update(patch)
+                dst.write(json.dumps(obj, ensure_ascii=False) + "\n")
+                updated = True
+            else:
+                dst.write(raw if raw.endswith("\n") else raw + "\n")
+
+    tmp.replace(path)
+    return updated
+
 
 def _maybe_optimize(skill_dir: Path, log_path: Path, template_rel: str, state_path: Path, threshold: int) -> None:
-    total = _count_jsonl_lines(log_path)
     state = _load_state(state_path)
-    if total < threshold:
+    labeled = _count_labeled_sessions(log_path)
+    if labeled < threshold:
         return
-    if total - state.last_optimized_count < threshold:
+    if labeled - state.last_optimized_labeled_count < threshold:
         return
 
     scripts_dir = Path(__file__).resolve().parent
@@ -112,14 +172,19 @@ def _maybe_optimize(skill_dir: Path, log_path: Path, template_rel: str, state_pa
     optimize_questionnaire.update_template(Path(args.out), summary)  # noqa: SLF001
     optimize_questionnaire.update_skill_md((skill_dir / "SKILL.md").resolve(), summary)  # noqa: SLF001
 
-    _save_state(state_path, State(last_optimized_count=total, last_optimized_at=_utc_now_iso()))
+    _save_state(state_path, State(last_optimized_labeled_count=labeled, last_optimized_at=_utc_now_iso()))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="记录一次 smart-data-query 问答样本（JSONL），并在样本数达到阈值时自动更新问卷模板。"
     )
-    parser.add_argument("--label", required=True, choices=["good", "bad"], help="样本标签。")
+    parser.add_argument("--label", default="unknown", choices=["good", "bad", "unknown"], help="样本标签。")
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="更新已存在的 session-id 记录（用于补充 good/bad + 反馈/问题标签）；若不存在则回退为追加写入。",
+    )
 
     parser.add_argument("--question", default="", help="用户原始问数需求文本。")
     parser.add_argument("--question-file", default="", help="用户原始问数需求文本文件路径。")
@@ -160,20 +225,45 @@ def main() -> int:
     script_dir = Path(__file__).resolve().parent
     skill_dir = script_dir.parent
 
+    entry_id = args.session_id.strip() or str(uuid.uuid4())
+    issues = [x.strip() for x in (args.issues or "").split(",") if x.strip()]
+
+    log_path = (skill_dir / args.log_file).resolve()
+    state_path = (skill_dir / args.state_file).resolve()
+
     question = _read_text_arg(args.question, args.question_file or None)
     answer = _read_text_arg(args.answer, args.answer_file or None)
+
+    if args.update:
+        patch: dict[str, Any] = {
+            "label": args.label,
+            "feedback": {"text": (args.feedback or "").strip(), "issues": issues},
+            "dialect": (args.dialect or "").strip(),
+            "warehouse_path": (args.warehouse_path or "").strip(),
+            "sql_path": (args.sql_path or "").strip(),
+            "meta": _parse_kv(args.meta),
+            "updated_at": _utc_now_iso(),
+        }
+        if question:
+            patch["question"] = question
+        if answer:
+            patch["answer"] = answer
+        ok = _update_jsonl_entry(log_path, entry_id, patch)
+        if ok:
+            print(f"OK: updated log: {log_path} (id={entry_id})")
+        else:
+            print(f"NOTE: log id not found, appending instead (id={entry_id})")
+        if ok:
+            if not args.no_optimize:
+                _maybe_optimize(skill_dir, log_path, args.template, state_path, threshold=args.threshold)
+            return 0
+
     if not question:
         print("ERROR: empty question (provide --question or --question-file)", file=sys.stderr)
         return 2
     if not answer:
         print("ERROR: empty answer (provide --answer or --answer-file)", file=sys.stderr)
         return 2
-
-    entry_id = args.session_id.strip() or str(uuid.uuid4())
-    issues = [x.strip() for x in (args.issues or "").split(",") if x.strip()]
-
-    log_path = (skill_dir / args.log_file).resolve()
-    state_path = (skill_dir / args.state_file).resolve()
 
     payload: dict[str, Any] = {
         "id": entry_id,
@@ -191,6 +281,7 @@ def main() -> int:
 
     _append_jsonl(log_path, payload)
     print(f"OK: appended log: {log_path}")
+    print("NOTE: logs live under assets/logs/ and are gitignored; use ls/cat to view them (git status won't show).")
 
     if not args.no_optimize:
         _maybe_optimize(skill_dir, log_path, args.template, state_path, threshold=args.threshold)

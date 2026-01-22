@@ -75,14 +75,32 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 
 目标：把每次问数问答沉淀为可复盘/可训练的样本（good/bad case），并在样本累计到一定数量时自动更新“问数需求问卷模板”。
 
-## 记录样本（手动打标）
+重要说明：
+- 本 skill 的日志需要由“执行本 skill 的 agent”自动写入（本地运行 `scripts/log_qa.py`），而不是让用户手动执行命令。
+- 日志默认写在 `assets/logs/` 下，该目录已被仓库 `.gitignore` 忽略，所以 `git status` 看不到它，但文件实际存在。
 
-在交付完成后，把“用户需求 + 最终交付 + 反馈 + 标签”记录到本 skill 目录的日志文件：
+## 自动记录（每次执行都写一条）
 
-- `python3 scripts/log_qa.py --label good --question-file <need.txt> --answer-file <final.sql> --feedback "已验收，通过"`
-- `python3 scripts/log_qa.py --label bad --question-file <need.txt> --answer-file <final.sql> --feedback "粒度没问清导致口径错" --issues missing_grain,missing_metric`
+规则：每次使用本 skill 完成一次交付（输出最终 SQL/说明）后，agent **必须**自动写入一条日志（默认先记为 `unknown`，待用户反馈后再更新为 `good`/`bad`）。
 
-建议在 bad case 里优先用 `--issues` 记录结构化问题，便于后续模板自动补强。常用 issue 示例：
+内部动作（agent 自己执行，不要求用户执行）：
+
+1. 生成 `session-id`（UUID）并贯穿本轮问答。
+2. 把“用户需求文本”和“最终交付内容”保存为临时文件（避免命令行过长）：`need.txt` / `final.sql`。
+3. 追加写入日志（默认 `unknown`）：
+   - `python3 scripts/log_qa.py --label unknown --session-id <uuid> --question-file need.txt --answer-file final.sql`
+
+## 收集反馈并更新标签（good/bad）
+
+在交付后向用户只问一个问题：  
+“本次结果是否可用？请回复 `good` 或 `bad`，并用 1-3 句话说明原因（如是 bad，尽量说明哪里不对/缺了什么）。”
+
+收到用户反馈后，agent **必须**更新同一个 `session-id` 的日志记录（不会新增一条，而是更新原记录）：
+
+- good：`python3 scripts/log_qa.py --update --label good --session-id <uuid> --feedback "<原因>"`
+- bad：`python3 scripts/log_qa.py --update --label bad --session-id <uuid> --feedback "<原因>" --issues <issue1,issue2,...>`
+
+建议 bad case 用 `--issues` 记录结构化问题，便于后续模板与规则自动迭代。常用 issue 示例：
 
 - `missing_metric` / `missing_dimension` / `missing_grain` / `missing_time_range` / `missing_filters`
 - `missing_output_fields` / `missing_topn_sort` / `missing_dialect_engine` / `missing_dw_path` / `missing_partition_field`
@@ -90,11 +108,18 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 
 ## 自动更新问卷模板（阈值触发）
 
-当日志新增样本累计到 20 条（每新增 20 条再触发一次），会自动运行一轮模板更新，写入：[`references/问数需求问卷模板.md`](references/问数需求问卷模板.md)。
+当日志中“已标注（good/bad）的样本”累计到 20 条（每新增 20 条再触发一次），会自动运行一轮模板更新，写入：[`references/问数需求问卷模板.md`](references/问数需求问卷模板.md)，并同步更新本文件的“迭代摘要”。
 
 也可手动触发：
 
 - `python3 scripts/optimize_questionnaire.py`
+
+## 每次问答结束的“强制收尾动作”（让日志真的被写入）
+
+在输出最终 SQL/口径说明后：
+1. 自动记录：先写入 `unknown` 日志（保存 session-id）。
+2. 收集反馈：让用户回复 `good/bad + 原因`；收到后用 `--update` 更新同一条日志为 `good`/`bad`。
+3. 达到阈值：由脚本自动触发模板与本 skill 的迭代摘要更新。
 
 <!-- ITERATION:START -->
 
@@ -102,16 +127,16 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 
 说明：本段由日志自动汇总，用于沉淀“容易遗漏的澄清点/护栏”。业务问卷尽量保持非技术化；技术性补问沉淀在本 skill 规则中。
 
-- 更新时间：2026-01-22T03:52:07+00:00
+- 更新时间：2026-01-22T04:10:43+00:00
 - 累计样本：1（good=0, bad=1）
 
 ### bad case 高频问题（Top）
 
-- missing_dw_path: 1
+- missing_time_range: 1
 
 ### 规则沉淀建议（偏技术，写进本 skill）
 
-- 补问数仓目录路径（含 ADS/DWS/DWT + 设计文档 + DDL/ETL SQL），按“逐步加载”流程建立 catalog 再选表。
+- 暂无（建议在 bad case 里补充 `--issues`，尤其是技术性遗漏项）。
 
 <!-- ITERATION:END -->
 # 资源（按需使用）

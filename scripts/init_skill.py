@@ -16,13 +16,32 @@ def _render_skill_md(skill_name: str) -> str:
     if template_path.exists():
         template = template_path.read_text(encoding="utf-8")
         template = template.replace("name: my-skill", f"name: {skill_name}")
+        template = template.replace("my-skill", skill_name)
         return template
 
+    # 回退模板（含 i18n 支持）
     return (
         "---\n"
         f"name: {skill_name}\n"
-        "description: 用一句话说明这个 skill 做什么，以及在什么触发语境/任务类型下应该使用它（尽量包含关键词）。\n"
+        "description: [ZH] 用一句话说明这个 skill 做什么，以及在什么触发语境/任务类型下应该使用它（尽量包含关键词）；"
+        "[EN] Describe what this skill does in one sentence, and in what context/task type it should be used (include keywords)；"
+        "[JA] このスキルが何をするか、どのような状況/タスクで使用すべきかを一文で説明（キーワードを含む）\n"
         "---\n\n"
+        "<!-- i18n-examples:start -->\n"
+        "## 调用 / Invoke / 呼び出し\n\n"
+        "### 中文\n"
+        f'- "用 {skill_name} 执行某任务"\n'
+        f'- "用 {skill_name} 生成某结果"\n'
+        f'- "用 {skill_name} 处理某输入"\n\n'
+        "### English\n"
+        f'- "Use {skill_name} to perform a task"\n'
+        f'- "Use {skill_name} to generate a result"\n'
+        f'- "Use {skill_name} to process an input"\n\n'
+        "### 日本語\n"
+        f'- "{skill_name} でタスクを実行して"\n'
+        f'- "{skill_name} で結果を生成して"\n'
+        f'- "{skill_name} で入力を処理して"\n'
+        "<!-- i18n-examples:end -->\n\n"
         "# 目标\n\n"
         "用简短文字说明这个 skill 要帮 agent 交付的最终结果（可量化/可验收）。\n\n"
         "# 流程\n\n"

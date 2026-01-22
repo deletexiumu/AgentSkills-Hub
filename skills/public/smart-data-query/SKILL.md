@@ -1,7 +1,29 @@
 ---
 name: smart-data-query
-description: 智能问数/数仓问答技能：输入一段业务需求 + 一个数仓目录（含 ADS/DWS/DWT 表目录、表设计文档、每表 SQL(DDL+ETL)），逐步检索并加载相关表，最终产出可直接在数据库执行的查询 SQL（人工执行导出）。适用于“给我一条能按需求导出的 SQL”“根据需求在数仓里找表/字段/口径并写查询”“已给 ADS/DWS/DWT 表定义与 ETL SQL，要求拼出最终取数 SQL”等场景。
+description: [ZH] 智能问数/数仓问答技能：输入业务需求+数仓目录，产出可执行查询SQL；[EN] Smart data query skill: input business requirements + data warehouse catalog, output executable SQL queries；[JA] スマートデータクエリスキル：ビジネス要件+DWHカタログを入力し、実行可能なSQLクエリを出力
 ---
+
+<!-- i18n-examples:start -->
+## 调用 / Invoke / 呼び出し
+
+### 中文
+- "用 smart-data-query：查最近7天各渠道新增用户数"
+- "用 smart-data-query 帮我写一条查询各门店日销售额的 SQL"
+- "smart-data-query：按月统计各品类 GMV，需要同比环比"
+- "用 smart-data-query 从数仓里找用户留存相关的表并写查询"
+
+### English
+- "Use smart-data-query: SQL for daily active users by channel"
+- "Use smart-data-query to write a query for store sales by date"
+- "smart-data-query: generate SQL for monthly GMV by category with YoY comparison"
+- "Use smart-data-query to find retention tables and write the query"
+
+### 日本語
+- "smart-data-query：チャネル別DAUを取得するSQLを作成して"
+- "smart-data-query で店舗別日次売上を取得するクエリを書いて"
+- "smart-data-query：カテゴリ別月次GMVのSQLを生成して"
+- "smart-data-query でユーザーリテンション関連のテーブルを探してクエリを作成して"
+<!-- i18n-examples:end -->
 
 # 目标
 

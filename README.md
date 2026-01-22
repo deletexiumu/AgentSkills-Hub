@@ -30,8 +30,9 @@ Public（可分发）：
 | Skill | 说明 | 位置 |
 |-------|------|------|
 | `example-skill` | 示例 skill，用于验证本仓库的 skill 工具链与约束 | `skills/public/example-skill/` |
-| `smart-data-query` | 智能问数/数仓问答（基于需求 + 数仓目录 DDL+ETL 产出可执行 SQL；默认 Hive/SparkSQL） | `skills/public/smart-data-query/` |
+| `smart-data-query` | 智能问数/数仓问答（产出可执行 SQL；包含业务问卷模板 + 问答日志 + 自动迭代摘要） | `skills/public/smart-data-query/` |
 | `ai-news-digest` | AI 资讯摘要生成器（多信源聚合、去重、分类，输出每日简报） | `skills/public/ai-news-digest/` |
+| `x-ai-digest` | 从 X 平台「为你推荐」抓取 AI 资讯并生成每日简报（需浏览器自动化能力） | `skills/public/x-ai-digest/` |
 
 ### ai-news-digest
 

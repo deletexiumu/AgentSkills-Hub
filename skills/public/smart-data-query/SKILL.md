@@ -1,6 +1,6 @@
 ---
 name: smart-data-query
-description: [ZH] 智能问数/数仓问答技能：输入业务需求+数仓目录，产出可执行查询SQL；[EN] Smart data query skill: input business requirements + data warehouse catalog, output executable SQL queries；[JA] スマートデータクエリスキル：ビジネス要件+DWHカタログを入力し、実行可能なSQLクエリを出力
+description: Smart data warehouse Q&A skill - input business requirements + DWH catalog, output executable SQL queries. Features catalog-aware search, multi-dialect support (Hive/SparkSQL/GaussDB), auto-iteration from feedback.
 ---
 
 <!-- i18n-examples:start -->

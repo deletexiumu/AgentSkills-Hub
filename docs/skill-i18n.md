@@ -1,111 +1,114 @@
-# Skill 多语言（i18n）规范
+# Skill i18n Specification
 
-本文档定义 `skills/public` 下 skill 的多语言支持规范，确保中文、英文、日文三语一致性。
+This document defines the multi-language support specification for skills under `skills/public`, ensuring consistency across Chinese, English, and Japanese.
 
-## 1. Frontmatter Description 规范
+## 1. Frontmatter Description
 
-### 1.1 单行写法
+### 1.1 Format
 
-在 `SKILL.md` 的 frontmatter 中，`description` 字段使用 `[ZH]/[EN]/[JA]` 标记区分不同语言版本：
+The `description` field in `SKILL.md` frontmatter must be in **English only** for compatibility with [skills.sh](https://skills.sh) and other tools:
 
 ```yaml
 ---
 name: my-skill
-description: [ZH] 中文描述；[EN] English description；[JA] 日本語の説明
+description: Describe what this skill does in one sentence. Include key features and supported languages if applicable.
 ---
 ```
 
-**规则**：
-- 三语版本用分号（`；`）分隔
-- 每段以 `[ZH]`、`[EN]`、`[JA]` 开头
-- 中文版本放在最前面（向后兼容）
-- 单行不换行，保持 YAML 解析兼容性
+**Rules**:
+- Use English for machine readability and tool compatibility
+- Keep it concise (1-2 sentences)
+- Include key features and capabilities
+- Mention supported languages if multi-language output is supported (e.g., "multi-language output (ZH/EN/JA)")
 
-### 1.2 示例
+### 1.2 Examples
 
 ```yaml
-description: [ZH] 多信源 AI 资讯聚合与简报生成，支持自动去重、分类、链接溯源；[EN] Multi-source AI news aggregation and digest generation with deduplication, classification, and source tracing；[JA] 複数ソースからのAIニュース収集と要約生成、重複排除・分類・出典追跡機能付き
+# Good
+description: Multi-source AI news aggregation and digest generation with deduplication, classification, and source tracing. Supports 20+ sources, 5 theme categories, multi-language output (ZH/EN/JA), and image export.
+
+# Good
+description: Smart data warehouse Q&A skill - input business requirements + DWH catalog, output executable SQL queries. Features catalog-aware search, multi-dialect support (Hive/SparkSQL/GaussDB).
 ```
 
-## 2. 调用示例区块规范
+## 2. Invoke Examples Block
 
-### 2.1 位置
+### 2.1 Location
 
-在 `SKILL.md` 的 frontmatter 结束后（第 5 行之后），紧跟"调用 / Invoke / 呼び出し"示例区块。
+After the frontmatter (line 5+), add an invoke examples block with examples in all three languages.
 
-### 2.2 格式
+### 2.2 Format
 
 ```markdown
 <!-- i18n-examples:start -->
-## 调用 / Invoke / 呼び出し
+## Invoke Examples
 
-### 中文
-- "用 {skill-name} 生成今天的 AI 资讯简报"
-- "用 {skill-name} 获取昨天的新闻"
+### Chinese
+- "Use my-skill to perform a task"
+- "Use my-skill to generate a result"
 - ...
 
 ### English
-- "Use {skill-name} to generate today's AI news digest"
-- "Use {skill-name} to get yesterday's news"
+- "Use my-skill to perform a task"
+- "Use my-skill to generate a result"
 - ...
 
-### 日本語
-- "{skill-name} で今日のAIニュース要約を生成して"
-- "{skill-name} で昨日のニュースを取得して"
+### Japanese
+- "my-skill to execute a task"
+- "my-skill to generate a result"
 - ...
 <!-- i18n-examples:end -->
 ```
 
-**规则**：
-- 使用 HTML 注释标记区块边界（便于校验脚本识别）
-- 每种语言至少 3-4 条示例
-- 示例应覆盖主要使用场景
+**Rules**:
+- Use HTML comments to mark block boundaries (for validation scripts)
+- At least 3-4 examples per language
+- Examples should cover main use cases
 
-## 3. 输出语言约定
+## 3. Output Language Convention
 
-### 3.1 CLI 参数
+### 3.1 CLI Parameter
 
-所有支持多语言输出的 skill，统一使用 `--lang` 参数：
+All skills that support multi-language output should use the `--lang` parameter:
 
 ```
 --lang auto|zh|en|ja
 ```
 
-| 值 | 说明 |
-|---|---|
-| `auto` | 自动检测（根据用户提示词语言） |
-| `zh` | 中文（默认） |
+| Value | Description |
+|-------|-------------|
+| `auto` | Auto-detect (based on user prompt language) |
+| `zh` | Chinese (default) |
 | `en` | English |
-| `ja` | 日本語 |
+| `ja` | Japanese |
 
-### 3.2 默认行为
+### 3.2 Default Behavior
 
-- 未指定 `--lang` 时，默认 `zh`（中文）
-- 向后兼容：现有 `--lang zh` / `--lang en` 继续可用
+- When `--lang` is not specified, default to `zh` (Chinese)
+- Backward compatible: existing `--lang zh` / `--lang en` continue to work
 
-### 3.3 输出内容
+### 3.3 Output Content
 
-- 标题、分类名、UI 文案根据 `--lang` 切换
-- 原始数据（如新闻标题）若为外语，可翻译为目标语言
-- JSON 输出中保留 `title_raw` / `summary_raw` 等原始字段
+- Titles, category names, UI text switch based on `--lang`
+- Original data (e.g., news titles) in foreign language can be translated to target language
+- JSON output preserves `title_raw` / `summary_raw` for traceability
 
-## 4. 自然语言触发词
+## 4. Natural Language Triggers
 
-支持多语言的时间触发词：
+Support multi-language time trigger words:
 
-| 中文 | English | 日本語 | 偏移天数 |
-|------|---------|--------|----------|
-| 今天 | today | 今日/きょう | 0 |
-| 昨天 | yesterday | 昨日/きのう | -1 |
-| 前天 | - | 一昨日/おととい | -2 |
+| Chinese | English | Japanese | Offset Days |
+|---------|---------|----------|-------------|
+| today | today | today | 0 |
+| yesterday | yesterday | yesterday | -1 |
+| yesterday | - | yesterday | -2 |
 
-## 5. 校验清单
+## 5. Validation Checklist
 
-使用 `scripts/validate_i18n.py` 校验以下项：
+Use `scripts/validate_i18n.py` to validate:
 
-1. **frontmatter description**：包含 `[ZH]`、`[EN]`、`[JA]` 三个标记
-2. **调用示例区块**：SKILL.md 前 60 行存在"调用/Invoke/呼び出し"区块
-3. **示例数量**：中/英/日示例各 >= 3 条
+1. **Invoke examples block**: SKILL.md first 60 lines contain "Invoke" section
+2. **Example count**: At least 3 examples per language (ZH/EN/JA)
 
 ```bash
 python scripts/validate_i18n.py skills/public/ai-news-digest
@@ -113,16 +116,16 @@ python scripts/validate_i18n.py skills/public/smart-data-query
 python scripts/validate_i18n.py skills/public/x-ai-digest
 ```
 
-## 6. 迁移指南
+## 6. Migration Guide
 
-### 6.1 现有 skill 迁移步骤
+### 6.1 Migrating Existing Skills
 
-1. 更新 frontmatter description，添加 `[ZH]/[EN]/[JA]` 标记
-2. 在"# 目标"之前添加调用示例区块
-3. 若有 CLI，扩展 `--lang` 参数支持 `ja`
-4. 若有时间解析，添加日语触发词
-5. 运行 `validate_i18n.py` 校验
+1. Update frontmatter description to English only
+2. Add invoke examples block before "# Goal" section
+3. If CLI exists, extend `--lang` parameter to support `ja`
+4. If time parsing exists, add Japanese trigger words
+5. Run `validate_i18n.py` to validate
 
-### 6.2 新建 skill
+### 6.2 Creating New Skills
 
-使用 `scripts/init_skill.py` 创建时，模板已包含 i18n 骨架。
+Use `scripts/init_skill.py` to create - template already includes i18n skeleton.

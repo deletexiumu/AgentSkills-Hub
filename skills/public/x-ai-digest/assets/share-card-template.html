@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 每日简报</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .card {
+      width: 750px;
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 40px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(102,126,234,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .logo-text {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .date {
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .title {
+      color: #fff;
+      font-size: 32px;
+      font-weight: 900;
+      position: relative;
+      z-index: 1;
+      line-height: 1.4;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+      margin-top: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .content {
+      padding: 40px 48px;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .section-icon.fire {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    }
+
+    .section-icon.google {
+      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+    }
+
+    .section-icon.chain {
+      background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    }
+
+    .section-icon.code {
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .topic-card {
+      background: #f8f9fc;
+      border-radius: 16px;
+      padding: 24px;
+      border-left: 4px solid;
+    }
+
+    .topic-card.anthropic {
+      border-color: #d97706;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+
+    .topic-card.google {
+      border-color: #4285f4;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    }
+
+    .topic-card.langchain {
+      border-color: #00b894;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    }
+
+    .topic-card.openai {
+      border-color: #7c3aed;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    }
+
+    .topic-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topic-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-hot {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .badge-new {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .topic-desc {
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.7;
+    }
+
+    .topic-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 20px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .footer {
+      background: #f8f9fc;
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .qr-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .qr-hint-icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">
+          <div class="logo-icon">{{logo_icon}}</div>
+          <span class="logo-text">{{logo_text}}</span>
+        </div>
+        <div class="date">{{date}}</div>
+      </div>
+      <div class="title">{{title}}</div>
+      <div class="subtitle">{{subtitle}}</div>
+    </div>
+
+    <div class="content">
+      {{#sections}}
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon {{icon_class}}">{{icon}}</div>
+          <div class="section-title">{{section_title}}</div>
+        </div>
+        <div class="topic-card {{card_class}}">
+          <div class="topic-title">
+            {{topic_title}}
+            {{#badge}}<span class="topic-badge {{badge_class}}">{{badge_text}}</span>{{/badge}}
+          </div>
+          <div class="topic-desc">{{topic_desc}}</div>
+          <div class="topic-tags">
+            {{#tags}}
+            <span class="tag">{{.}}</span>
+            {{/tags}}
+          </div>
+        </div>
+      </div>
+      {{/sections}}
+    </div>
+
+    <div class="footer">
+      <div class="footer-left">
+        <div class="stats">
+          {{#stats}}
+          <div class="stat">
+            <div class="stat-value">{{value}}</div>
+            <div class="stat-label">{{label}}</div>
+          </div>
+          {{/stats}}
+        </div>
+      </div>
+      <div class="qr-hint">
+        <span class="qr-hint-icon">{{footer_icon}}</span>
+        <span>{{footer_text}}</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,7 +1,29 @@
 ---
 name: ai-news-digest
-description: 多信源 AI 资讯聚合与简报生成，支持自动去重、分类、链接溯源。
+description: [ZH] 多信源 AI 资讯聚合与简报生成，支持自动去重、分类、链接溯源；[EN] Multi-source AI news aggregation and digest generation with deduplication, classification, and source tracing；[JA] 複数ソースからのAIニュース収集と要約生成、重複排除・分類・出典追跡機能付き
 ---
+
+<!-- i18n-examples:start -->
+## 调用 / Invoke / 呼び出し
+
+### 中文
+- "用 ai-news-digest 生成今天的 AI 资讯简报"
+- "用 ai-news-digest 获取昨天的 AI 新闻"
+- "用 ai-news-digest 看看前天有什么 AI 动态"
+- "帮我用 ai-news-digest 整理一下最近的 AI 资讯"
+
+### English
+- "Use ai-news-digest to generate today's AI news digest"
+- "Use ai-news-digest to get yesterday's AI news in English"
+- "Generate an AI news summary for 2026-01-20 using ai-news-digest"
+- "Use ai-news-digest to summarize recent AI developments"
+
+### 日本語
+- "ai-news-digest で今日のAIニュース要約を日本語で作成して"
+- "ai-news-digest で昨日のAIニュースを取得して"
+- "ai-news-digest を使って最近のAI動向をまとめて"
+- "ai-news-digest で一昨日のAI関連ニュースを教えて"
+<!-- i18n-examples:end -->
 
 # 目标
 

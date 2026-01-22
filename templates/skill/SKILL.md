@@ -1,7 +1,26 @@
 ---
 name: my-skill
-description: 用一句话说明这个 skill 做什么，以及在什么触发语境/任务类型下应该使用它（尽量包含关键词）。
+description: [ZH] 用一句话说明这个 skill 做什么，以及在什么触发语境/任务类型下应该使用它（尽量包含关键词）；[EN] Describe what this skill does in one sentence, and in what context/task type it should be used (include keywords)；[JA] このスキルが何をするか、どのような状況/タスクで使用すべきかを一文で説明（キーワードを含む）
 ---
+
+<!-- i18n-examples:start -->
+## 调用 / Invoke / 呼び出し
+
+### 中文
+- "用 my-skill 执行某任务"
+- "用 my-skill 生成某结果"
+- "用 my-skill 处理某输入"
+
+### English
+- "Use my-skill to perform a task"
+- "Use my-skill to generate a result"
+- "Use my-skill to process an input"
+
+### 日本語
+- "my-skill でタスクを実行して"
+- "my-skill で結果を生成して"
+- "my-skill で入力を処理して"
+<!-- i18n-examples:end -->
 
 # 目标
 

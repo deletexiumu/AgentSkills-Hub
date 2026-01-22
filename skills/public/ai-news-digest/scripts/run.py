@@ -457,8 +457,8 @@ def main():
     # 输出选项
     parser.add_argument(
         "--lang", "-l",
-        help="输出语言（zh/en）",
-        choices=["zh", "en"],
+        help="输出语言（auto/zh/en/ja）",
+        choices=["auto", "zh", "en", "ja"],
         default="zh"
     )
     parser.add_argument(

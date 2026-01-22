@@ -40,13 +40,65 @@ class TranslationResult:
     error: Optional[str] = None
 
 
+# 多语言翻译 prompt 模板
+TRANSLATION_PROMPTS = {
+    "zh": """你是一个 AI 资讯翻译助手。请将以下英文内容翻译为中文。
+
+要求：
+1. 保持专业术语的准确性，模型名称、公司名称保留原文
+2. 翻译风格简洁，信息密度高
+3. 避免营销语气和夸张表达
+
+输入：
+标题：{title}
+摘要：{summary}
+
+请直接按以下 JSON 格式输出（不要有其他内容）：
+{{"title_zh": "翻译后的中文标题", "summary_zh": "翻译后的中文摘要"}}""",
+
+    "en": """You are an AI news translation assistant. Please translate the following content into English.
+
+Requirements:
+1. Keep technical terms accurate, preserve model names and company names
+2. Use concise style with high information density
+3. Avoid marketing tone and exaggeration
+
+Input:
+Title: {title}
+Summary: {summary}
+
+Please output directly in the following JSON format (no other content):
+{{"title_zh": "Translated English title", "summary_zh": "Translated English summary"}}""",
+
+    "ja": """あなたはAIニュース翻訳アシスタントです。以下の内容を日本語に翻訳してください。
+
+要件：
+1. 専門用語の正確性を保ち、モデル名や企業名は原文のまま
+2. 簡潔なスタイルで情報密度を高く
+3. マーケティング調や誇張表現を避ける
+
+入力：
+タイトル：{title}
+要約：{summary}
+
+以下のJSON形式で直接出力してください（他の内容は不要）：
+{{"title_zh": "翻訳後の日本語タイトル", "summary_zh": "翻訳後の日本語要約"}}""",
+}
+
+
+def get_translation_prompt(target_lang: str, title: str, summary: str) -> str:
+    """获取指定语言的翻译 prompt"""
+    template = TRANSLATION_PROMPTS.get(target_lang, TRANSLATION_PROMPTS["zh"])
+    return template.format(title=title, summary=summary)
+
+
 @dataclass
 class SummarizeInput:
     """摘要输入"""
     title_raw: str
     summary_raw: str
     content: str = ""  # 可选的正文片段
-    target_lang: str = "zh"
+    target_lang: str = "zh"  # 目标语言：zh/en/ja
 
 
 class LLMProvider(ABC):
@@ -82,19 +134,12 @@ class AnthropicProvider(LLMProvider):
                 error="Anthropic API 不可用"
             )
 
-        prompt = f"""你是一个 AI 资讯翻译助手。请将以下英文内容翻译为中文。
-
-要求：
-1. 保持专业术语的准确性，模型名称、公司名称保留原文
-2. 翻译风格简洁，信息密度高
-3. 避免营销语气和夸张表达
-
-输入：
-标题：{input_data.title_raw}
-摘要：{input_data.summary_raw}
-
-请直接按以下 JSON 格式输出（不要有其他内容）：
-{{"title_zh": "翻译后的中文标题", "summary_zh": "翻译后的中文摘要"}}"""
+        # 使用多语言 prompt
+        prompt = get_translation_prompt(
+            input_data.target_lang,
+            input_data.title_raw,
+            input_data.summary_raw
+        )
 
         try:
             client = anthropic.Anthropic(api_key=self.api_key)
@@ -148,19 +193,12 @@ class OpenAIProvider(LLMProvider):
                 error="OpenAI API 不可用"
             )
 
-        prompt = f"""你是一个 AI 资讯翻译助手。请将以下英文内容翻译为中文。
-
-要求：
-1. 保持专业术语的准确性，模型名称、公司名称保留原文
-2. 翻译风格简洁，信息密度高
-3. 避免营销语气和夸张表达
-
-输入：
-标题：{input_data.title_raw}
-摘要：{input_data.summary_raw}
-
-请直接按以下 JSON 格式输出（不要有其他内容）：
-{{"title_zh": "翻译后的中文标题", "summary_zh": "翻译后的中文摘要"}}"""
+        # 使用多语言 prompt
+        prompt = get_translation_prompt(
+            input_data.target_lang,
+            input_data.title_raw,
+            input_data.summary_raw
+        )
 
         try:
             client = openai.OpenAI(api_key=self.api_key)

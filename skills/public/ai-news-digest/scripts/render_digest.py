@@ -21,17 +21,95 @@ except ImportError:
     from backports.zoneinfo import ZoneInfo
 
 
-# 主题中文名称映射
-TOPIC_NAMES = {
-    "research": "研究 / 论文 / 实验室",
-    "product": "产品 / 模型 / 发布",
-    "opensource": "开源 / 工具 / 工程",
-    "funding": "投融资 / 商业",
-    "policy": "政策 / 伦理 / 安全",
-    "other": "其他",
+# 主题多语言名称映射
+TOPIC_NAMES_I18N = {
+    "zh": {
+        "research": "研究 / 论文 / 实验室",
+        "product": "产品 / 模型 / 发布",
+        "opensource": "开源 / 工具 / 工程",
+        "funding": "投融资 / 商业",
+        "policy": "政策 / 伦理 / 安全",
+        "other": "其他",
+    },
+    "en": {
+        "research": "Research / Papers / Labs",
+        "product": "Products / Models / Releases",
+        "opensource": "Open Source / Tools / Engineering",
+        "funding": "Funding / Business",
+        "policy": "Policy / Ethics / Safety",
+        "other": "Other",
+    },
+    "ja": {
+        "research": "研究 / 論文 / ラボ",
+        "product": "製品 / モデル / リリース",
+        "opensource": "オープンソース / ツール / エンジニアリング",
+        "funding": "資金調達 / ビジネス",
+        "policy": "政策 / 倫理 / 安全性",
+        "other": "その他",
+    },
 }
 
+# 向后兼容：默认中文
+TOPIC_NAMES = TOPIC_NAMES_I18N["zh"]
+
 TOPIC_ORDER = ["research", "product", "opensource", "funding", "policy", "other"]
+
+
+def get_topic_names(lang: str = "zh") -> dict:
+    """获取指定语言的主题名称映射"""
+    return TOPIC_NAMES_I18N.get(lang, TOPIC_NAMES_I18N["zh"])
+
+
+# UI 文案多语言映射
+UI_TEXTS_I18N = {
+    "zh": {
+        "digest_title": "AI 资讯简报",
+        "time_window": "时间窗口",
+        "language": "语言",
+        "sources": "信源",
+        "sources_format": "共 {queried} 个，成功 {succeeded} 个",
+        "lang_name": "中文",
+        "link": "链接",
+        "summary": "摘要",
+        "tags": "标签",
+        "also_reported": "同时报道",
+        "untranslated": "（未翻译）",
+        "failed_sources": "抓取失败的信源",
+    },
+    "en": {
+        "digest_title": "AI News Digest",
+        "time_window": "Time Window",
+        "language": "Language",
+        "sources": "Sources",
+        "sources_format": "{queried} total, {succeeded} succeeded",
+        "lang_name": "English",
+        "link": "Link",
+        "summary": "Summary",
+        "tags": "Tags",
+        "also_reported": "Also reported by",
+        "untranslated": " (untranslated)",
+        "failed_sources": "Failed Sources",
+    },
+    "ja": {
+        "digest_title": "AIニュース要約",
+        "time_window": "期間",
+        "language": "言語",
+        "sources": "ソース",
+        "sources_format": "合計 {queried} 件、成功 {succeeded} 件",
+        "lang_name": "日本語",
+        "link": "リンク",
+        "summary": "要約",
+        "tags": "タグ",
+        "also_reported": "他のソース",
+        "untranslated": "（未翻訳）",
+        "failed_sources": "取得失敗のソース",
+    },
+}
+
+
+def get_ui_texts(lang: str = "zh") -> dict:
+    """获取指定语言的 UI 文案"""
+    return UI_TEXTS_I18N.get(lang, UI_TEXTS_I18N["zh"])
 
 
 @dataclass
@@ -91,10 +169,12 @@ class DigestRenderer:
 
         Args:
             template_path: 模板文件路径（可选）
-            output_lang: 输出语言
+            output_lang: 输出语言（zh/en/ja）
         """
         self.output_lang = output_lang
         self.template = self._load_template(template_path)
+        self.topic_names = get_topic_names(output_lang)
+        self.ui_texts = get_ui_texts(output_lang)
 
     def _load_template(self, template_path: Optional[str]) -> str:
         """加载模板"""
@@ -136,24 +216,24 @@ class DigestRenderer:
 
         # 检查是否未翻译
         flags = getattr(item, 'flags', [])
-        untranslated_mark = "（未翻译）" if "untranslated" in flags else ""
+        untranslated_mark = self.ui_texts["untranslated"] if "untranslated" in flags else ""
 
         lines = [
             f"- **{title}**{untranslated_mark}（{source_name}，{published_at}）",
-            f"  - 链接：{url}",
+            f"  - {self.ui_texts['link']}：{url}",
         ]
 
         if summary:
-            lines.append(f"  - 摘要：{summary}")
+            lines.append(f"  - {self.ui_texts['summary']}：{summary}")
 
         if tags:
-            lines.append(f"  - 标签：{', '.join(tags[:5])}")
+            lines.append(f"  - {self.ui_texts['tags']}：{', '.join(tags[:5])}")
 
         # 显示多信源提及
         mentions = getattr(item, 'mentions', [])
         if mentions:
             mention_strs = [f"{m.get('source_name', m.get('source_id', ''))}" for m in mentions]
-            lines.append(f"  - 同时报道：{', '.join(mention_strs)}")
+            lines.append(f"  - {self.ui_texts['also_reported']}：{', '.join(mention_strs)}")
 
         return "\n".join(lines)
 
@@ -162,7 +242,7 @@ class DigestRenderer:
         if not items:
             return ""
 
-        topic_name = TOPIC_NAMES.get(topic, topic)
+        topic_name = self.topic_names.get(topic, topic)
         lines = [f"## {topic_name}", ""]
 
         for item in items:
@@ -176,7 +256,7 @@ class DigestRenderer:
         if not failures:
             return ""
 
-        lines = ["## 抓取失败的信源", ""]
+        lines = [f"## {self.ui_texts['failed_sources']}", ""]
         for f in failures:
             lines.append(f"- **{f.source_name}**（{f.source_id}）：{f.reason}")
 
@@ -197,13 +277,20 @@ class DigestRenderer:
         window_display = window.get("display", f"{window.get('since', '')} ~ {window.get('until', '')}")
         date_str = self._format_date(digest.meta.generated_at)[:10]
 
+        # 获取语言显示名称
+        lang_name = self.ui_texts["lang_name"]
+        sources_str = self.ui_texts["sources_format"].format(
+            queried=digest.meta.sources_queried,
+            succeeded=digest.meta.sources_succeeded
+        )
+
         # 构建输出
         lines = [
-            f"# AI 资讯简报（{date_str}）",
+            f"# {self.ui_texts['digest_title']}（{date_str}）",
             "",
-            f"> 时间窗口：{window_display}",
-            f"> 语言：{'中文' if digest.meta.lang == 'zh' else digest.meta.lang}",
-            f"> 信源：共 {digest.meta.sources_queried} 个，成功 {digest.meta.sources_succeeded} 个",
+            f"> {self.ui_texts['time_window']}：{window_display}",
+            f"> {self.ui_texts['language']}：{lang_name}",
+            f"> {self.ui_texts['sources']}：{sources_str}",
             "",
         ]
 
@@ -311,13 +398,15 @@ def render_digest(
         failures: 失败列表
         output_format: 输出格式（markdown/json）
         template_path: 模板路径
-        **kwargs: 其他参数（传给 create_digest）
+        **kwargs: 其他参数（传给 create_digest），包括 lang 用于多语言支持
 
     Returns:
         渲染后的字符串
     """
+    # 提取 lang 参数用于渲染器
+    output_lang = kwargs.get("lang", "zh")
     digest = create_digest(grouped_items, time_window, failures, **kwargs)
-    renderer = DigestRenderer(template_path=template_path)
+    renderer = DigestRenderer(template_path=template_path, output_lang=output_lang)
 
     if output_format == "json":
         return renderer.render_json(digest)

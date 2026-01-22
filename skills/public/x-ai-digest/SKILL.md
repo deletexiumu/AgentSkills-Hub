@@ -1,7 +1,29 @@
 ---
 name: x-ai-digest
-description: 从 X 平台主页「为你推荐」栏目抓取 AI 相关资讯，生成每日简报并提供回复建议。
+description: [ZH] 从 X 平台主页「为你推荐」栏目抓取 AI 相关资讯，生成每日简报并提供回复建议；[EN] Scrape AI-related posts from X platform's "For You" feed, generate daily digest with reply suggestions；[JA] Xプラットフォームの「おすすめ」からAI関連投稿を収集し、日次要約と返信提案を生成
 ---
+
+<!-- i18n-examples:start -->
+## 调用 / Invoke / 呼び出し
+
+### 中文
+- "用 x-ai-digest 抓取今天的 AI 热点"
+- "用 x-ai-digest 生成昨天的 X 平台 AI 简报"
+- "x-ai-digest 帮我看看前天 X 上有什么 AI 相关动态"
+- "用 x-ai-digest 整理最近的 AI 推文并给出回复建议"
+
+### English
+- "Use x-ai-digest to scrape today's AI hot topics from X"
+- "Use x-ai-digest to summarize AI posts from yesterday in English"
+- "Generate an X platform AI digest for 2026-01-20 using x-ai-digest"
+- "Use x-ai-digest to compile recent AI tweets with reply suggestions"
+
+### 日本語
+- "x-ai-digest で今日のAI関連投稿を日本語で要約して"
+- "x-ai-digest で昨日のXプラットフォームのAI動向を取得して"
+- "x-ai-digest を使って最近のAI関連ツイートをまとめて"
+- "x-ai-digest で一昨日のAI投稿を収集して返信提案を作成して"
+<!-- i18n-examples:end -->
 
 # 目标
 

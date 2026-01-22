@@ -12,3 +12,5 @@ venv/
 dist/
 .DS_Store
 
+# Skill local logs (training cases)
+skills/**/assets/logs/

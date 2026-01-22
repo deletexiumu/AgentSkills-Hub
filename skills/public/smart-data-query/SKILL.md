@@ -9,18 +9,27 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 
 # 输入（先问清）
 
-1. 需求内容：指标/维度/口径/时间范围/过滤条件/分组粒度/输出字段清单/排序与 TopN 规则。
-2. 数仓目录路径：包含 `ADS/`、`DWS/`、`DWT/`（大小写不敏感）及其下的表目录/设计文档/SQL 文件。
-3. SQL 方言与执行引擎：默认 Hive/SparkSQL；仅当用户明确要求时再输出 GaussDB 版本（影响日期函数、分区写法、引用符号）。
+建议优先使用标准化问卷收集需求，避免遗漏：[`references/问数需求问卷模板.md`](references/问数需求问卷模板.md)。
+
+## 业务侧（给业务方填写）
+
+1. 需求内容：指标/维度/口径/时间范围/过滤条件/输出字段清单/排序与 TopN 规则（尽量用业务语言）。
+2. 业务对象定义：例如“订单/用户/门店/商家”的定义与边界（含口径差异）。
+3. 验收方式与样例：对账来源、旧报表/看板链接、期望结果样例（3-5 行）。
+
+## 数仓侧补充（由数据同学补齐）
+
+1. 数仓目录路径：包含 `ADS/`、`DWS/`、`DWT/`（大小写不敏感）及其下的表目录/设计文档/SQL 文件。
+2. SQL 方言与执行引擎：默认 Hive/SparkSQL；仅当用户明确要求时再输出 GaussDB 版本（影响日期函数、分区写法、引用符号）。
    - 若 Hive 版本偏低/不确定：避免在 `SELECT` 列表或 `JOIN ... ON` 中使用子查询表达式（低版本 Hive 常报 `Unsupported SubQuery Expression`），优先改写为 `JOIN`/派生表/CTE。
    - Hive（尤其低版本）兼容性规则：
      - `ORDER BY` 必须只引用“当前 `SELECT` 的输出列名”（如果输出用了中文别名，就必须用中文别名；不要写底层字段名）。
      - 不要使用 `ORDER BY 1/2/3` 这类序号排序（你们环境明确不允许，且兼容性差）。
-4. 表名命名/库名规则：是否需要加库前缀（如 `dw.ads_xxx`），以及环境（prod/test）。
-5. 时间字段与分区策略：常用分区字段名（如 `dt`/`ds`/`biz_date`），是字符串还是日期类型。
-6. 交付形式：只要最终 SQL，还是需要同时输出口径说明/字段释义/可选参数模板。
-7. schema 关系文档（如果有）：描述表与表之间关系/主外键/维度映射的文档路径或命名规则。
-8. 输出字段命名偏好：业务验收优先用中文字段名（默认是）；若担心引擎兼容，可用“英文 alias + 中文注释”的双轨输出。
+3. 表名命名/库名规则：是否需要加库前缀（如 `dw.ads_xxx`），以及环境（prod/test）。
+4. 时间字段与分区策略：常用分区字段名（如 `dt`/`ds`/`biz_date`），是字符串还是日期类型。
+5. 交付形式：只要最终 SQL，还是需要同时输出口径说明/字段释义/可选参数模板。
+6. schema 关系文档（如果有）：描述表与表之间关系/主外键/维度映射的文档路径或命名规则。
+7. 输出字段命名偏好：业务验收优先用中文字段名（默认是）；若担心引擎兼容，可用“英文 alias + 中文注释”的双轨输出。
 
 # 流程（逐步加载，尽量少读文件）
 
@@ -62,11 +71,57 @@ description: 智能问数/数仓问答技能：输入一段业务需求 + 一个
 - 默认只做“查询导出 SQL”，不尝试实际连库执行或推断结果正确性（除非用户提供样例数据/结果对账规则）。
 - 发现需求与现有表口径不一致时，优先回问澄清，或同时给出多种口径的可执行 SQL 分支。
 
+# 持续优化迭代（日志 + 问卷模板）
+
+目标：把每次问数问答沉淀为可复盘/可训练的样本（good/bad case），并在样本累计到一定数量时自动更新“问数需求问卷模板”。
+
+## 记录样本（手动打标）
+
+在交付完成后，把“用户需求 + 最终交付 + 反馈 + 标签”记录到本 skill 目录的日志文件：
+
+- `python3 scripts/log_qa.py --label good --question-file <need.txt> --answer-file <final.sql> --feedback "已验收，通过"`
+- `python3 scripts/log_qa.py --label bad --question-file <need.txt> --answer-file <final.sql> --feedback "粒度没问清导致口径错" --issues missing_grain,missing_metric`
+
+建议在 bad case 里优先用 `--issues` 记录结构化问题，便于后续模板自动补强。常用 issue 示例：
+
+- `missing_metric` / `missing_dimension` / `missing_grain` / `missing_time_range` / `missing_filters`
+- `missing_output_fields` / `missing_topn_sort` / `missing_dialect_engine` / `missing_dw_path` / `missing_partition_field`
+- `mismatch_definition` / `performance_risk`
+
+## 自动更新问卷模板（阈值触发）
+
+当日志新增样本累计到 20 条（每新增 20 条再触发一次），会自动运行一轮模板更新，写入：[`references/问数需求问卷模板.md`](references/问数需求问卷模板.md)。
+
+也可手动触发：
+
+- `python3 scripts/optimize_questionnaire.py`
+
+<!-- ITERATION:START -->
+
+## 迭代摘要（自动生成）
+
+说明：本段由日志自动汇总，用于沉淀“容易遗漏的澄清点/护栏”。业务问卷尽量保持非技术化；技术性补问沉淀在本 skill 规则中。
+
+- 更新时间：2026-01-22T03:52:07+00:00
+- 累计样本：1（good=0, bad=1）
+
+### bad case 高频问题（Top）
+
+- missing_dw_path: 1
+
+### 规则沉淀建议（偏技术，写进本 skill）
+
+- 补问数仓目录路径（含 ADS/DWS/DWT + 设计文档 + DDL/ETL SQL），按“逐步加载”流程建立 catalog 再选表。
+
+<!-- ITERATION:END -->
 # 资源（按需使用）
 
 - 生成/更新索引：`scripts/build_catalog.py`
 - 关键词检索候选表：`scripts/search_catalog.py`
 - 输出 SQL 静态检查：`scripts/check_query.py`
+- 记录问答样本（good/bad + 反馈 + issues）：`scripts/log_qa.py`
+- 从日志更新“问数需求问卷模板”：`scripts/optimize_questionnaire.py`
 - 分层选表与口径核对要点：`references/分层与选表指南.md`
 - 最终 SQL 输出规范：`references/SQL-输出规范.md`
 - 静态验收清单：`references/静态验收清单.md`
+- 问数需求问卷模板：`references/问数需求问卷模板.md`

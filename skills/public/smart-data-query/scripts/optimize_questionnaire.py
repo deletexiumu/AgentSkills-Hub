@@ -20,19 +20,26 @@ SKILL_ITER_END = "<!-- ITERATION:END -->"
 ISSUE_TO_QUESTION: dict[str, str] = {
     "missing_metric": "要看的核心指标是什么？指标口径（去重/分母/是否含税/是否含退款）？",
     "missing_dimension": "需要按哪些维度拆分（如 渠道/地区/品类/组织）？维度枚举口径？",
-    "missing_grain": "最终结果需要的粒度是什么（天/周/月 + 用户/门店/订单…）？",
-    "missing_time_range": "时间范围是什么？用哪个时间字段（下单/支付/发货/入库/事件时间）？",
+    "missing_grain": "最终结果需要的粒度是什么（天/周/月 + 用户/门店/订单…）？数组字段是全部展开还是只取第一条？",
+    "missing_time_range": "时间范围是什么？用哪个时间字段（下单/支付/发货/入库/事件时间）？是否需要动态获取最新分区？",
     "missing_filters": "过滤条件有哪些（业务线/渠道/状态/人群/品类）？",
     "missing_output_fields": "输出字段清单是什么？字段命名偏好（中文/英文 alias）？",
     "missing_topn_sort": "是否需要排序/TopN？按什么排序？同分如何处理？",
     "mismatch_definition": "你们的业务口径与现有表口径有差异：以哪份口径为准？需要哪些对账样例？",
     "performance_risk": "对时效/延迟有要求吗？是否需要固定在某个更新频率（T+0/T+1）？",
+    "wrong_layer": "你希望从哪个数仓层取数（ADS/DWS/DWT）？有无指定的表或口径偏好？",
+    "wrong_logic": "多条件筛选时是取交集（AND/JOIN）还是并集（OR/UNION）？请明确逻辑关系。",
 }
 
 ISSUE_TO_SKILL_RULE: dict[str, str] = {
     "missing_dialect_engine": "补问执行引擎/方言（Hive/SparkSQL/GaussDB）与 Hive 版本兼容性，避免写出环境不支持的语法。",
-    "missing_dw_path": "补问数仓目录路径（含 ADS/DWS/DWT + 设计文档 + DDL/ETL SQL），按“逐步加载”流程建立 catalog 再选表。",
+    "missing_dw_path": "补问数仓目录路径（含 ADS/DWS/DWT + 设计文档 + DDL/ETL SQL），按「逐步加载」流程建立 catalog 再选表。",
     "missing_partition_field": "补问分区字段名与类型（dt/ds/biz_date），并确保时间过滤命中分区下推，避免全表扫描。",
+    "unsupported_function": "避免使用低版本 Hive 不支持的函数（如 TRANSFORM）。数组/结构体操作优先用 LATERAL VIEW EXPLODE；字符串提取优先用 regexp_extract/get_json_object。",
+    "wrong_layer": "在选表前明确用户的分层偏好：若用户明确要求从 DWT/DWS 取数，不要自动降级到 ADS 层。",
+    "missing_grain": "对于数组/嵌套字段，明确是「展开每条记录」还是「只取第一条/聚合」。默认展开全部，除非用户明确只要一条。",
+    "wrong_logic": "多条件筛选场景下，明确「交集（AND/INNER JOIN）」还是「并集（OR/UNION）」，避免逻辑理解偏差。",
+    "missing_time_range": "默认使用动态获取最新分区（CTE 子查询 MAX(dt)），除非用户明确要求参数化占位符。",
 }
 
 
@@ -337,11 +344,6 @@ def main() -> int:
         default="references/问数需求问卷模板.md",
         help="问卷模板输出路径（Markdown）。默认 references/问数需求问卷模板.md",
     )
-    parser.add_argument(
-        "--skill-md",
-        default="SKILL.md",
-        help="要同步写入迭代摘要的 SKILL.md 路径（默认 SKILL.md）。",
-    )
     parser.add_argument("--top", type=int, default=12, help="高频问题 TopN（默认 12）。")
     args = parser.parse_args()
 
@@ -350,17 +352,12 @@ def main() -> int:
 
     log_path = (skill_dir / args.log).resolve() if not Path(args.log).is_absolute() else Path(args.log).resolve()
     out_path = (skill_dir / args.out).resolve() if not Path(args.out).is_absolute() else Path(args.out).resolve()
-    skill_md_path = (
-        (skill_dir / args.skill_md).resolve() if not Path(args.skill_md).is_absolute() else Path(args.skill_md).resolve()
-    )
 
     entries = _read_jsonl(log_path)
     summary = summarize(entries, top_n=args.top)
     update_template(out_path, summary)
-    update_skill_md(skill_md_path, summary)
 
     print(f"OK: updated template: {out_path}")
-    print(f"OK: updated skill:    {skill_md_path}")
     print(f"    samples: total={summary.total}, good={summary.good}, bad={summary.bad}")
     return 0
 

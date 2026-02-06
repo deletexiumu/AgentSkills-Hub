@@ -1,0 +1,5 @@
+{
+  "name": "smart-data-query",
+  "version": "2.0.0",
+  "description": "数仓问数插件 - 根据业务需求 + 数仓目录生成可执行 SQL"
+}

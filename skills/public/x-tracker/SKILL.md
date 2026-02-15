@@ -31,15 +31,17 @@ version: 0.1.0
 
 ## 数据同步
 
+**重要**：不要主动运行 `sync-following.ts`。关注列表由定时任务或用户手动同步，新增关注需用户确认后才纳入跟踪。
+
 ```bash
 cd {SKILL_DIR}
-bun scripts/sync-following.ts          # 关注列表 → data/following/
+# bun scripts/sync-following.ts        # ⚠️ 仅限用户明确要求时运行
 bun scripts/sync-bookmarks.ts          # 书签 → data/bookmarks/
 bun scripts/fetch-my-tweets.ts         # 个人推文 → data/my-tweets/
 bun scripts/fetch-following-tweets.ts  # 关注者推文 → data/following-tweets/
 ```
 
-全量同步：`bun scripts/sync-following.ts && bun scripts/sync-bookmarks.ts && bun scripts/fetch-my-tweets.ts`
+日常同步（不含关注列表）：`bun scripts/sync-bookmarks.ts && bun scripts/fetch-my-tweets.ts && bun scripts/fetch-following-tweets.ts`
 
 ## 每日精选（Digest）
 

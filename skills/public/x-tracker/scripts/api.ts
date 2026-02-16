@@ -185,10 +185,3 @@ export async function apiPost(
   return resp.json();
 }
 
-/** Get authenticated user's info */
-export async function getMe(): Promise<{ id: string; name: string; username: string }> {
-  const resp = await apiGet("/users/me", {
-    "user.fields": "id,name,username",
-  });
-  return resp.data;
-}

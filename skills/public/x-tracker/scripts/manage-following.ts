@@ -103,21 +103,14 @@ function formatFollowers(n: number): string {
   return String(n);
 }
 
-// --- Fetch user info by username ---
+// --- Find user in local cache (latest.json) ---
 
-async function fetchUserByUsername(username: string): Promise<any | null> {
-  const clean = username.replace(/^@/, "");
-  const userFields =
-    "id,name,username,description,profile_image_url,public_metrics,created_at,location,url,verified";
-  try {
-    const json = await apiGet(`/users/by/username/${clean}`, {
-      "user.fields": userFields,
-    });
-    return json.data || null;
-  } catch (err: any) {
-    console.error(`Failed to fetch @${clean}: ${err.message}`);
-    return null;
-  }
+function findUserInCache(username: string): any | null {
+  const clean = username.replace(/^@/, "").toLowerCase();
+  const latestPath = join(followingDir, "latest.json");
+  if (!existsSync(latestPath)) return null;
+  const latest = JSON.parse(readFileSync(latestPath, "utf-8"));
+  return (latest.users || []).find((u: any) => u.username?.toLowerCase() === clean) || null;
 }
 
 // --- Fetch & classify latest tweets for a user ---
@@ -250,18 +243,20 @@ async function addUserToTracked(user: any) {
 
 async function cmdAdd(username: string) {
   const clean = username.replace(/^@/, "");
-  console.log(`Fetching @${clean}...`);
-  const user = await fetchUserByUsername(clean);
+  console.log(`Looking up @${clean} in local cache...`);
+  let user = findUserInCache(clean);
   if (!user) {
-    console.error(`User @${clean} not found.`);
-    process.exit(1);
+    // Not in cache, create minimal entry
+    console.log(`  Not found in cache, creating with basic info.`);
+    user = { id: "", username: clean, name: clean };
   }
 
   const f = user.public_metrics?.followers_count || 0;
-  console.log(
-    `  ${user.name} (@${user.username}) — ${formatFollowers(f)} followers`
-  );
-  console.log(`  "${(user.description || "").substring(0, 80)}"`);
+  if (f > 0) {
+    console.log(`  ${user.name} (@${user.username}) — ${formatFollowers(f)} followers`);
+  } else {
+    console.log(`  @${user.username} (basic info only)`);
+  }
   console.log();
 
   await addUserToTracked(user);

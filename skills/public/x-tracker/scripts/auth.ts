@@ -75,9 +75,15 @@ async function login() {
   authUrl.searchParams.set("code_challenge", codeChallenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
 
+  const url = authUrl.toString();
   console.log("\n=== OAuth 2.0 Authorization ===\n");
-  console.log("Open this URL in your browser:\n");
-  console.log(authUrl.toString());
+  console.log("Opening browser...\n");
+  console.log(url);
+
+  // Auto-open browser
+  const { spawn } = await import("child_process");
+  spawn("open", [url], { stdio: "ignore", detached: true }).unref();
+
   console.log(`\nWaiting for callback on 127.0.0.1:${LOCAL_CALLBACK_PORT} ...\n`);
 
   // Start local callback server
@@ -115,16 +121,20 @@ async function login() {
   config.token_expires_at =
     Math.floor(Date.now() / 1000) + tokenData.expires_in;
 
-  // Get user info
+  // Try to get user info (requires users.read scope)
   const userResp = await fetch("https://api.x.com/2/users/me", {
     headers: { Authorization: `Bearer ${config.access_token}` },
   });
-  const userData = await userResp.json();
-  config.user_id = userData.data.id;
-  config.username = userData.data.username;
+  if (userResp.ok) {
+    const userData = await userResp.json();
+    config.user_id = userData.data.id;
+    config.username = userData.data.username;
+  } else {
+    console.log("Skipped user info fetch (users.read scope not available).");
+  }
 
   saveConfig(config);
-  console.log(`\nAuthenticated as @${config.username} (ID: ${config.user_id})`);
+  console.log(`\nAuthenticated as @${config.username || "unknown"} (ID: ${config.user_id || "unknown"})`);
   console.log("Tokens saved to config.json");
 }
 

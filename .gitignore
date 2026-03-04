@@ -14,3 +14,6 @@ dist/
 
 # Skill local logs (training cases)
 skills/**/assets/logs/
+
+# Skill runtime config (generated at article root via symlink, not the template)
+.tech-article-creator.yaml

@@ -24,7 +24,7 @@ npx skills add deletexiumu/AgentSkills-Hub
 # Or install a specific skill
 npx skills add deletexiumu/AgentSkills-Hub/ai-news-digest
 npx skills add deletexiumu/AgentSkills-Hub/smart-data-query
-npx skills add deletexiumu/AgentSkills-Hub/x-ai-digest
+npx skills add deletexiumu/AgentSkills-Hub/tech-article-creator
 ```
 
 ### Manual Install
@@ -66,11 +66,59 @@ For more workflows and specifications, see: `docs/skill-workflow.md`.
 
 ## Available Skills
 
+### Content & Writing
+
 | Skill | Description | Highlights |
 |-------|-------------|------------|
-| `ai-news-digest` | Multi-source AI news aggregation and digest generation | 20+ sources, auto-dedup, 5 categories, image export |
-| `smart-data-query` | Intelligent data warehouse Q&A with executable SQL output | Auto-iteration, business questionnaire, Q&A logging |
-| `x-ai-digest` | X platform AI news scraper with reply suggestions | Browser automation, share card generation |
+| [`tech-article-creator`](#tech-article-creator) | End-to-end technical article creation pipeline | 9-stage workflow, Agent Team writing, multi-model review, configurable publishing |
+
+### News & Social Media
+
+| Skill | Description | Highlights |
+|-------|-------------|------------|
+| [`ai-news-digest`](#ai-news-digest) | Multi-source AI news aggregation and digest generation | 20+ sources, auto-dedup, 5 categories, image export |
+| [`x-ai-digest`](#x-ai-digest) | X platform AI news scraper with reply suggestions | Browser automation, share card generation |
+| [`x-tracker`](#x-tracker) | X following/bookmarks/tweets tracking and archival | Notion sync, content digest, style profiling |
+
+### Data & Operations
+
+| Skill | Description | Highlights |
+|-------|-------------|------------|
+| [`smart-data-query`](#smart-data-query) | Intelligent data warehouse Q&A with executable SQL output | Auto-iteration, business questionnaire, Q&A logging |
+| [`data-inspection-weekly-report`](#data-inspection-weekly-report) | Data processing inspection weekly report generator | YARN/Hive/ES/CK data, auto-upload to Feishu Wiki |
+| [`data-issue-handler`](#data-issue-handler) | Data governance issue processing pipeline | Feishu integration, AI analysis, batch review |
+| [`app-inspection`](#app-inspection) | Automated web application daily inspection | SMS login, screenshot logs, health checks |
+
+---
+
+## tech-article-creator
+
+> **End-to-end technical article creation: from topic selection to publishing, with multi-version writing and multi-model review.**
+
+A configurable 9-stage pipeline that takes you from topic brainstorming to published articles. Supports parallel Agent Team writing, external model review, and multi-platform publishing — all driven by a single config file.
+
+### Why tech-article-creator?
+
+| Advantage | Description |
+|-----------|-------------|
+| **9-Stage Pipeline** | Topic → Outline → Materials → Review → Writing → Title → Final Review → Images → Publish |
+| **Multi-Version Writing** | Configurable variants (e.g., technical deep-dive + storytelling version) with independent style/audience |
+| **Agent Team** | Parallel writing with dedicated writers and reviewers per version |
+| **External Review** | Optional multi-model review (any LLM provider) with iterative feedback |
+| **Configurable Publishing** | Local-only by default; opt-in to blog, WeChat, social media, or any platform |
+| **Zero-Config Start** | Works out of the box with sensible defaults; interactive setup on first use |
+
+### Usage Examples
+
+```
+"写一篇技术文章"
+"帮我选题"
+"评审一下大纲"
+"Write a technical tutorial about Docker networking"
+"Create an article outline for API design best practices"
+```
+
+See: [tech-article-creator/SKILL.md](skills/public/tech-article-creator/SKILL.md) | [tech-article-creator/README.md](skills/public/tech-article-creator/README.md)
 
 ---
 
@@ -196,17 +244,92 @@ Connects to your logged-in browser, scrapes AI-related posts from X's recommenda
 ### Usage Examples
 
 ```
-# Chinese
 "Use x-ai-digest to scrape today's AI hot topics from X"
-
-# English
 "Use x-ai-digest to summarize AI posts from yesterday in English"
-
-# Japanese
 "x-ai-digest で今日のAI関連投稿を日本語で要約して"
 ```
 
 See: [x-ai-digest/SKILL.md](skills/public/x-ai-digest/SKILL.md)
+
+---
+
+## x-tracker
+
+> **Track and archive X (Twitter) following list, bookmarks, and personal tweets with Notion sync.**
+
+Periodically archives your X data to local JSON and syncs to Notion. Generates content digests with ranking, rewrite candidates, and personal writing style profiling.
+
+### Why x-tracker?
+
+| Advantage | Description |
+|-----------|-------------|
+| **Full Archive** | Following list, bookmarks, and personal tweets |
+| **Notion Sync** | Automatic sync to Notion databases |
+| **Content Digest** | Daily/weekly curated digest with ranking |
+| **Style Profiling** | Analyze your posting patterns and writing style |
+| **Rewrite Suggestions** | Identify high-potential tweets for repurposing |
+
+### Usage Examples
+
+```
+"Sync my X following list"
+"Archive my bookmarks to Notion"
+"Generate today's X digest"
+"Analyze my posting style"
+```
+
+See: [x-tracker/SKILL.md](skills/public/x-tracker/SKILL.md)
+
+---
+
+## data-inspection-weekly-report
+
+> **Data processing inspection weekly report generator with auto-upload to Feishu Wiki.**
+
+Downloads raw inspection data from servers (YARN/Hive/ES/ClickHouse), analyzes metrics, generates a complete weekly report, and uploads to Feishu Wiki.
+
+### Usage Examples
+
+```
+"生成第8周的巡检周报"
+"Generate this week's data inspection report"
+```
+
+See: [data-inspection-weekly-report/SKILL.md](skills/public/data-inspection-weekly-report/SKILL.md)
+
+---
+
+## data-issue-handler
+
+> **Data governance issue processing pipeline: fetch from Feishu → AI analysis → batch review → update back.**
+
+End-to-end data governance workflow: fetches issue lists from Feishu, generates AI-powered analysis and recommendations, supports batch review and approval, then updates results back to Feishu.
+
+### Usage Examples
+
+```
+"处理数据治理问题清单"
+"Process data governance issues from Feishu"
+```
+
+See: [data-issue-handler/SKILL.md](skills/public/data-issue-handler/SKILL.md)
+
+---
+
+## app-inspection
+
+> **Automated web application daily inspection with SMS login and screenshot logging.**
+
+Automates login with credentials and SMS verification, verifies page load time, and captures screenshots as inspection logs.
+
+### Usage Examples
+
+```
+"应用巡检"
+"Run daily app inspection"
+```
+
+See: [app-inspection/SKILL.md](skills/public/app-inspection/SKILL.md)
 
 ---
 

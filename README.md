@@ -85,9 +85,6 @@ For more workflows and specifications, see: `docs/skill-workflow.md`.
 | Skill | Description | Highlights |
 |-------|-------------|------------|
 | [`smart-data-query`](#smart-data-query) | Intelligent data warehouse Q&A with executable SQL output | Auto-iteration, business questionnaire, Q&A logging |
-| [`data-inspection-weekly-report`](#data-inspection-weekly-report) | Data processing inspection weekly report generator | YARN/Hive/ES/CK data, auto-upload to Feishu Wiki |
-| [`data-issue-handler`](#data-issue-handler) | Data governance issue processing pipeline | Feishu integration, AI analysis, batch review |
-| [`app-inspection`](#app-inspection) | Automated web application daily inspection | SMS login, screenshot logs, health checks |
 
 ---
 
@@ -279,57 +276,6 @@ Periodically archives your X data to local JSON and syncs to Notion. Generates c
 ```
 
 See: [x-tracker/SKILL.md](skills/public/x-tracker/SKILL.md)
-
----
-
-## data-inspection-weekly-report
-
-> **Data processing inspection weekly report generator with auto-upload to Feishu Wiki.**
-
-Downloads raw inspection data from servers (YARN/Hive/ES/ClickHouse), analyzes metrics, generates a complete weekly report, and uploads to Feishu Wiki.
-
-### Usage Examples
-
-```
-"生成第8周的巡检周报"
-"Generate this week's data inspection report"
-```
-
-See: [data-inspection-weekly-report/SKILL.md](skills/public/data-inspection-weekly-report/SKILL.md)
-
----
-
-## data-issue-handler
-
-> **Data governance issue processing pipeline: fetch from Feishu → AI analysis → batch review → update back.**
-
-End-to-end data governance workflow: fetches issue lists from Feishu, generates AI-powered analysis and recommendations, supports batch review and approval, then updates results back to Feishu.
-
-### Usage Examples
-
-```
-"处理数据治理问题清单"
-"Process data governance issues from Feishu"
-```
-
-See: [data-issue-handler/SKILL.md](skills/public/data-issue-handler/SKILL.md)
-
----
-
-## app-inspection
-
-> **Automated web application daily inspection with SMS login and screenshot logging.**
-
-Automates login with credentials and SMS verification, verifies page load time, and captures screenshots as inspection logs.
-
-### Usage Examples
-
-```
-"应用巡检"
-"Run daily app inspection"
-```
-
-See: [app-inspection/SKILL.md](skills/public/app-inspection/SKILL.md)
 
 ---
 

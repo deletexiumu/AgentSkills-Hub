@@ -15,5 +15,9 @@ dist/
 # Skill local logs (training cases)
 skills/**/assets/logs/
 
+# Private skills (contain sensitive/internal data)
+skills/private/*
+!skills/private/.gitkeep
+
 # Skill runtime config (generated at article root via symlink, not the template)
 .tech-article-creator.yaml
